@@ -1,0 +1,517 @@
+@import "tailwindcss";
+
+/* ===================================================================
+   TELEGRAM WEB DARK THEME — Exact Variables & Styles
+   =================================================================== */
+
+:root {
+  --background: #181818;
+  --foreground: #ffffff;
+
+  /* Core Colors */
+  --tg-primary: #8774e1;
+  --tg-primary-rgb: 135, 116, 225;
+  --tg-surface: #212121;
+  --tg-surface-rgb: 33, 33, 33;
+  --tg-bg: #181818;
+  --tg-bg-rgb: 24, 24, 24;
+  --tg-text: #ffffff;
+  --tg-text-rgb: 255, 255, 255;
+  --tg-text-secondary: #aaaaaa;
+  --tg-text-secondary-rgb: 170, 170, 170;
+  --tg-border: #0f0f0f;
+  --tg-link: #8774e1;
+  --tg-green: #5CC85E;
+  --tg-danger: #ff595a;
+  --tg-secondary: #707579;
+
+  /* Message Colors */
+  --tg-msg-in: #212121;
+  --tg-msg-out: #8774e1;
+  --tg-msg-out-rgb: 135, 116, 225;
+  --tg-msg-time-out: rgba(255, 255, 255, 0.6);
+  --tg-msg-time-in: #aaaaaa;
+  --tg-msg-service-bg: rgba(0, 0, 0, 0.35);
+
+  /* Typography — from Telegram CSS dump */
+  --tg-font: "Roboto", -apple-system, apple color emoji, BlinkMacSystemFont,
+    "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue",
+    sans-serif;
+  --tg-font-mono: "Roboto Mono", monospace;
+  --tg-font-weight-normal: 400;
+  --tg-font-weight-bold: 500;
+  --tg-text-size: 16px;
+  /* --messages-text-size */
+  --tg-line-height: 1.3125;
+  /* --messages-line-height */
+  --tg-time-size: 12px;
+  /* messages-text-size - 4 */
+  --tg-name-size: 13px;
+  --tg-service-size: 15px;
+  /* messages-text-size - 1 */
+
+  /* Layout */
+  --tg-chat-width: 430px;
+  --tg-chat-bubbles-pad: 0.5rem;
+  /* 8px */
+  --tg-topbar-height: 3.25rem;
+  --tg-avatar-size: 40px;
+
+  /* Bubble Geometry */
+  --tg-bubble-radius: 12px;
+  --tg-bubble-radius-sm: 4px;
+  --tg-bubble-pad-top: 6px;
+  --tg-bubble-pad-inline: 9px;
+  --tg-bubble-pad-bottom: 7px;
+
+  /* Peer Colors — from CSS dump */
+  --tg-peer-3-color: rgb(64, 169, 32);
+  --tg-peer-3-color-rgb: 64, 169, 32;
+
+  /* Avatar Gradients */
+  --tg-avatar-green-top: #9AD164;
+  --tg-avatar-green-bottom: #46BA43;
+}
+
+/* ===== Tailwind v4 Theme Tokens ===== */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-tg-primary: var(--tg-primary);
+  --color-tg-surface: var(--tg-surface);
+  --color-tg-danger: var(--tg-danger);
+  --color-tg-text: var(--tg-text);
+  --color-tg-text-secondary: var(--tg-text-secondary);
+  --color-tg-bg: var(--tg-bg);
+  --color-tg-msg-in: var(--tg-msg-in);
+  --color-tg-msg-out: var(--tg-msg-out);
+  --color-tg-border: var(--tg-border);
+  --color-tg-green: var(--tg-green);
+  --font-sans: var(--tg-font);
+  --font-mono: var(--tg-font-mono);
+}
+
+/* ===== Base ===== */
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overflow-x: hidden;
+}
+
+body {
+  /* background-color: var(--tg-bg);
+  background-image: url("/telegram-bg.png");
+  background-repeat: repeat;
+  background-size: 400px;
+  background-position: center; */
+  color: var(--tg-text);
+  font-family: var(--tg-font);
+  font-size: var(--tg-text-size);
+  line-height: var(--tg-line-height);
+  font-weight: var(--tg-font-weight-normal);
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+  overflow: hidden;
+}
+
+/* ===== Chat Background ===== */
+.chat-bg {
+  position: relative;
+  background-color: var(--tg-bg);
+  background-image: url("/telegram-bg.png");
+  background-repeat: repeat;
+  background-size: 400px;
+  background-position: center;
+}
+
+/* ===================================================================
+   BUBBLES — GROUP LAYOUT
+   =================================================================== */
+
+.tg-group {
+  display: flex;
+  align-items: flex-end;
+  margin-bottom: 7px;
+}
+
+.tg-group--in {
+  justify-content: flex-start;
+  padding-right: 42px;
+  /* keep incoming from stretching too far right */
+}
+
+.tg-group--out {
+  justify-content: flex-end;
+  padding-left: 42px;
+  /* keep outgoing from stretching too far left */
+}
+
+/* Avatar column — fixed 40px + 8px gap */
+.tg-group-avatar {
+  width: var(--tg-avatar-size);
+  height: var(--tg-avatar-size);
+  flex-shrink: 0;
+  margin-right: 8px;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.tg-group-avatar--gradient {
+  background: linear-gradient(135deg,
+      var(--tg-avatar-green-top),
+      var(--tg-avatar-green-bottom));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: var(--tg-font-weight-bold);
+  font-size: 18px;
+}
+
+/* Stack of bubbles inside a group */
+.tg-group-bubbles {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.tg-group--in .tg-group-bubbles {
+  align-items: flex-start;
+}
+
+.tg-group--out .tg-group-bubbles {
+  align-items: flex-end;
+}
+
+/* ===================================================================
+   BUBBLE — Individual message
+   =================================================================== */
+
+.tg-bubble {
+  position: relative;
+  padding: var(--tg-bubble-pad-top) var(--tg-bubble-pad-inline) var(--tg-bubble-pad-bottom);
+  word-break: break-word;
+  user-select: text;
+  font-size: var(--tg-text-size);
+  line-height: var(--tg-line-height);
+  border-radius: var(--tg-bubble-radius);
+  max-width: 100%;
+  overflow: visible;
+  /* allow tail to render outside */
+  width: fit-content;
+  /* only as wide as content */
+}
+
+/* Colors */
+.tg-bubble--in {
+  background-color: var(--tg-msg-in);
+  color: var(--tg-text);
+}
+
+.tg-bubble--out {
+  background-color: var(--tg-msg-out);
+  color: var(--tg-text);
+}
+
+/* ——— Border-radius: INCOMING ——— */
+
+/* Single (first + last) */
+.tg-bubble--in.tg-bubble--first.tg-bubble--last {
+  border-radius: var(--tg-bubble-radius) var(--tg-bubble-radius) var(--tg-bubble-radius) 0;
+}
+
+/* First only */
+.tg-bubble--in.tg-bubble--first:not(.tg-bubble--last) {
+  border-radius: var(--tg-bubble-radius) var(--tg-bubble-radius) var(--tg-bubble-radius) var(--tg-bubble-radius-sm);
+}
+
+/* Middle */
+.tg-bubble--in:not(.tg-bubble--first):not(.tg-bubble--last) {
+  border-radius: var(--tg-bubble-radius-sm) var(--tg-bubble-radius) var(--tg-bubble-radius) var(--tg-bubble-radius-sm);
+}
+
+/* Last only */
+.tg-bubble--in.tg-bubble--last:not(.tg-bubble--first) {
+  border-radius: var(--tg-bubble-radius-sm) var(--tg-bubble-radius) var(--tg-bubble-radius) 0;
+}
+
+/* ——— Border-radius: OUTGOING ——— */
+
+/* Single (first + last) */
+.tg-bubble--out.tg-bubble--first.tg-bubble--last {
+  border-radius: var(--tg-bubble-radius) var(--tg-bubble-radius) 0 var(--tg-bubble-radius);
+}
+
+/* First only */
+.tg-bubble--out.tg-bubble--first:not(.tg-bubble--last) {
+  border-radius: var(--tg-bubble-radius) var(--tg-bubble-radius) var(--tg-bubble-radius-sm) var(--tg-bubble-radius);
+}
+
+/* Middle */
+.tg-bubble--out:not(.tg-bubble--first):not(.tg-bubble--last) {
+  border-radius: var(--tg-bubble-radius) var(--tg-bubble-radius-sm) var(--tg-bubble-radius-sm) var(--tg-bubble-radius);
+}
+
+/* Last only */
+.tg-bubble--out.tg-bubble--last:not(.tg-bubble--first) {
+  border-radius: var(--tg-bubble-radius) var(--tg-bubble-radius-sm) 0 var(--tg-bubble-radius);
+}
+
+/* ===================================================================
+   BUBBLE TAIL
+   =================================================================== */
+
+.tg-tail {
+  position: absolute;
+  bottom: 0;
+  width: 11px;
+  height: 20px;
+  pointer-events: none;
+  display: block;
+  z-index: 1;
+}
+
+.tg-tail--in {
+  left: -8.4px;
+  fill: var(--tg-msg-in);
+  transform: translateY(1px);
+}
+
+.tg-tail--out {
+  right: -8.4px;
+  fill: var(--tg-msg-out);
+  transform: translateY(1px) scaleX(-1);
+}
+
+/* ===== Status Checkmark ===== */
+.tg-status {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* ===================================================================
+   SENDER NAME
+   =================================================================== */
+
+.tg-name {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  user-select: none;
+  margin-bottom: 1px;
+}
+
+.tg-name-title {
+  font-size: var(--tg-name-size);
+  font-weight: var(--tg-font-weight-bold);
+  line-height: 18px;
+  color: var(--tg-peer-3-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tg-name-rank {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--tg-text-secondary);
+  flex-shrink: 0;
+}
+
+/* ===================================================================
+   MESSAGE TEXT
+   =================================================================== */
+
+.tg-message {
+  font-size: var(--tg-text-size);
+  line-height: var(--tg-line-height);
+  word-break: break-word;
+  white-space: pre-wrap;
+  user-select: text;
+}
+
+/* ===================================================================
+   TIME + STATUS
+   =================================================================== */
+
+.tg-time {
+  float: right;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: var(--tg-time-size);
+  line-height: 17px;
+  margin-top: 4px;
+  margin-left: 8px;
+  user-select: none;
+  pointer-events: none;
+  height: 17px;
+  white-space: nowrap;
+}
+
+.tg-time--in {
+  color: var(--tg-msg-time-in);
+}
+
+.tg-time--out {
+  color: var(--tg-msg-time-out);
+}
+
+.tg-time-pinned {
+  width: 14px;
+  height: 14px;
+  opacity: 0.7;
+}
+
+.tg-clearfix {
+  display: block;
+  clear: both;
+}
+
+/* ===================================================================
+   MONOSPACE / CODE
+   =================================================================== */
+
+.tg-mono {
+  font-family: var(--tg-font-mono);
+  font-size: calc(var(--tg-text-size) - 1px);
+  background: rgba(255, 255, 255, 0.08);
+  padding: 2px 5px;
+  border-radius: 4px;
+  color: var(--tg-text);
+}
+
+/* ===================================================================
+   LINKS & MENTIONS
+   =================================================================== */
+
+.tg-link {
+  color: var(--tg-link);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.tg-link:hover {
+  text-decoration: underline;
+}
+
+/* ===================================================================
+   REPLY QUOTE
+   =================================================================== */
+
+.tg-reply {
+  display: flex;
+  border-radius: 4px;
+  margin-bottom: 5px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+}
+
+.tg-reply-bar {
+  width: 2px;
+  flex-shrink: 0;
+  border-radius: 1px;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.tg-reply-content {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 8px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.tg-reply-name {
+  font-size: var(--tg-name-size);
+  font-weight: var(--tg-font-weight-bold);
+  line-height: 16px;
+  color: rgba(255, 255, 255, 0.8);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tg-reply-text {
+  font-size: var(--tg-name-size);
+  line-height: 16px;
+  color: rgba(255, 255, 255, 0.55);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ===================================================================
+   DATE SEPARATOR
+   =================================================================== */
+
+.tg-date {
+  display: flex;
+  justify-content: center;
+  padding: 6px 0;
+  user-select: none;
+}
+
+.tg-date-pill {
+  padding: 3px 12px;
+  background: var(--tg-msg-service-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 16px;
+  color: white;
+  font-size: var(--tg-service-size);
+  line-height: 21px;
+  font-weight: var(--tg-font-weight-normal);
+}
+
+/* ===================================================================
+   SERVICE MESSAGE
+   =================================================================== */
+
+.tg-service {
+  display: flex;
+  justify-content: center;
+  padding: 2px 0 4px;
+  user-select: none;
+}
+
+.tg-service-pill {
+  padding: 4px 12px;
+  background: var(--tg-msg-service-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 16px;
+  color: white;
+  font-size: var(--tg-service-size);
+  line-height: 21px;
+  font-weight: var(--tg-font-weight-normal);
+  text-align: center;
+}
+
+/* ===================================================================
+   FLOATING BARS (header, pinned, input)
+   =================================================================== */
+
+.tg-floating-bar {
+  background: #212121;
+  border-radius: 1.5rem;
+}
+
+/* ===================================================================
+   SCROLLBAR (hidden)
+   =================================================================== */
+
+* {
+  scrollbar-width: none;
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
