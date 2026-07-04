@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Paperclip, Smile, Mic, Send } from 'lucide-react';
+import { Paperclip, Sticker, Mic, Send } from 'lucide-react';
 
 export default function MessageInput() {
   const [message, setMessage] = useState('');
@@ -12,54 +12,50 @@ export default function MessageInput() {
     if (textarea) {
       textarea.style.height = '24px';
       const scrollHeight = textarea.scrollHeight;
-      textarea.style.height = `${Math.min(scrollHeight, 160)}px`;
+      textarea.style.height = `${Math.min(scrollHeight, 120)}px`;
     }
   }, [message]);
 
   return (
-    <div className="tg-floating-bar flex items-end w-full px-1 py-[5px] text-[var(--tg-text)] min-h-[3.25rem]">
-      
+    <div className="flex items-center gap-[8px] w-full px-1 text-[var(--tg-text)]">
+
       {/* Attach */}
-      <button className="w-10 h-10 flex items-center justify-center rounded-full text-[var(--tg-text-secondary)] hover:bg-white/8 transition-colors duration-200 shrink-0 mb-[1px]">
-        <Paperclip className="w-[22px] h-[22px]" />
+      <button className="liquid-glass liquid-glass--gray flex items-center justify-center size-[42px] rounded-full shrink-0 text-white transition-transform duration-200 active:scale-95">
+        <Paperclip className="relative z-[1] w-[22px] h-[22px]" strokeWidth={2} />
       </button>
 
-      {/* Input */}
-      <div className="flex-1 flex items-end min-h-[2.5rem] px-1 py-2">
+      {/* Input pill */}
+      <div className="liquid-glass liquid-glass--gray flex flex-1 items-center min-w-0 h-[42px] rounded-full overflow-hidden pl-[18px] pr-[5px]">
         <textarea
           ref={textareaRef}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder="Message"
           rows={1}
-          className="w-full bg-transparent text-white placeholder-[var(--tg-text-secondary)] outline-none resize-none text-[16px] leading-[1.3125] max-h-40 min-h-[24px]"
+          className="relative z-[1] flex-1 bg-transparent text-white placeholder-[var(--tg-text-secondary)] outline-none resize-none text-[16px] leading-[24px] min-h-[24px] max-h-[120px]"
           style={{ fontFamily: 'var(--tg-font)' }}
         />
-      </div>
-
-      {/* Emoji */}
-      <button className="w-10 h-10 flex items-center justify-center rounded-full text-[var(--tg-text-secondary)] hover:bg-white/8 transition-colors duration-200 shrink-0 mb-[1px]">
-        <Smile className="w-[22px] h-[22px]" />
-      </button>
-
-      {/* Send / Mic */}
-      <div className="flex items-center shrink-0 mb-[1px] mr-0.5">
-        <button 
-          className="w-10 h-10 flex items-center justify-center rounded-full bg-[var(--tg-primary)] hover:brightness-110 text-white shrink-0 transition-all duration-200 active:scale-95"
-          onClick={() => {
-            if (message.trim()) {
-              console.log('Sending message:', message);
-              setMessage('');
-            }
-          }}
-        >
-          {message.trim() ? (
-            <Send className="w-[20px] h-[20px] ml-[2px]" />
-          ) : (
-            <Mic className="w-[20px] h-[20px]" />
-          )}
+        <button className="relative z-[1] flex items-center justify-center size-[32px] rounded-full text-[var(--tg-text-secondary)] hover:text-white transition-colors duration-200 shrink-0 ml-1">
+          <Sticker className="w-[22px] h-[22px]" strokeWidth={2} />
         </button>
       </div>
+
+      {/* Send / Mic */}
+      <button
+        className="liquid-glass liquid-glass--gray flex items-center justify-center size-[42px] rounded-full shrink-0 text-white transition-transform duration-200 active:scale-95"
+        onClick={() => {
+          if (message.trim()) {
+            console.log('Sending message:', message);
+            setMessage('');
+          }
+        }}
+      >
+        {message.trim() ? (
+          <Send className="relative z-[1] w-[20px] h-[20px] ml-[2px]" strokeWidth={2} />
+        ) : (
+          <Mic className="relative z-[1] w-[20px] h-[20px]" strokeWidth={2} />
+        )}
+      </button>
     </div>
   );
 }
