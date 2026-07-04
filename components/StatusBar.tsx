@@ -14,11 +14,11 @@ export default function StatusBar() {
       </span>
 
       {/* Center — Dynamic Island (iPhone 16 Pro) */}
-      <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
+      <div className="absolute left-1/2 -translate-x-1/2 top-[11px]">
         <div
           className="rounded-full bg-black"
           style={{
-            width: '118px',
+            width: '125px',
             height: '35px',
           }}
         />

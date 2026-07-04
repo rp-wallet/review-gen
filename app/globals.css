@@ -364,6 +364,13 @@ body {
   flex-shrink: 0;
 }
 
+.tg-status-image {
+  width: 19px;
+  height: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
 /* ===================================================================
    SENDER NAME
    =================================================================== */
@@ -1159,7 +1166,7 @@ body {
   position: relative;
   width: 402px;
   display: block;
-  overflow: hidden;
+  overflow: visible;
   padding: 0;
   border: 0;
   background: transparent;
@@ -1209,7 +1216,7 @@ body {
   width: 432px;
   height: 904px;
   transform-origin: center center;
-  border-radius: 64px;
+  border-radius: 70px;
   z-index: 1;
 
   /* Titanium metal gradient — lighter mid-gray tones with a brighter
@@ -1234,9 +1241,6 @@ body {
      2. Tight diffuse glow
      3. Top highlight (studio light reflection on top edge) */
   box-shadow:
-    0 40px 80px -15px rgba(0, 0, 0, 0.85),
-    0 20px 40px -10px rgba(0, 0, 0, 0.6),
-    0 0 60px -10px rgba(0, 0, 0, 0.5),
     inset 0 1px 0 rgba(255, 255, 255, 0.25),
     inset 0 -1px 0 rgba(0, 0, 0, 0.4);
 
@@ -1258,7 +1262,7 @@ body {
   content: "";
   position: absolute;
   inset: 3px;
-  border-radius: 61px;
+  border-radius: 67px;
   background: #0a0a0c;
   /* Subtle inner shadow to create the "sunken glass" illusion */
   box-shadow:
@@ -1273,11 +1277,11 @@ body {
   content: "";
   position: absolute;
   /* Positioned to sit exactly around the 402×874 screen area */
-  top: 12px;
-  left: 12px;
-  right: 12px;
-  bottom: 12px;
-  border-radius: 53px;
+  top: 15px;
+  left: 15px;
+  right: 15px;
+  bottom: 15px;
+  border-radius: 55px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   pointer-events: none;
 }
