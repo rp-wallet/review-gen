@@ -6,7 +6,6 @@ type ScreenshotInput = {
 };
 
 type GenerateRequest = {
-  apiKey?: string;
   product?: string;
   scenario?: string;
   count?: number;
@@ -28,10 +27,13 @@ function cleanJson(text: string) {
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as GenerateRequest;
-    const apiKey = body.apiKey?.trim();
+    const apiKey = process.env.GEMINI_API_KEY?.trim();
 
     if (!apiKey) {
-      return NextResponse.json({ error: 'Gemini API key is required.' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Server is missing GEMINI_API_KEY. Add it to .env.local and restart.' },
+        { status: 500 }
+      );
     }
 
     const product = body.product?.trim() || 'LarperWallet';

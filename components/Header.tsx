@@ -5,9 +5,15 @@ interface HeaderProps {
   title: string;
   subtitle: string;
   unreadCount?: number;
+  avatarInitial?: string;
+  avatarColor?: string;
 }
 
-export default function Header({ title = "Alfz", subtitle = "In Larper_wallet_support_team", unreadCount = 154 }: HeaderProps) {
+export default function Header({ 
+  title = "Alfz", 
+  subtitle = "In Larper_wallet_support_team", 
+  unreadCount = 154
+}: HeaderProps) {
   return (
     <div
       className="flex items-center gap-[8px] w-full cursor-pointer relative text-[var(--tg-text)] shrink-0 px-1"
@@ -40,7 +46,7 @@ export default function Header({ title = "Alfz", subtitle = "In Larper_wallet_su
             <svg viewBox="0 0 24 24" className="w-full h-full text-[#3478F6]" fill="currentColor">
               <path d="M12 2C6.48 2 2 6.03 2 11c0 2.87 1.5 5.43 3.82 7.07L4.5 22l4.23-2.11A10.87 10.87 0 0012 20c5.52 0 10-4.03 10-9s-4.48-9-10-9z" />
             </svg>
-            <span className="absolute inset-0 flex items-center justify-center text-white text-[13px] font-bold pb-[2px] pr-[1px]">A</span>
+            <span className="absolute inset-0 flex items-center justify-center text-white text-[13px] font-bold pb-[2px] pr-[1px]">{title.charAt(0).toUpperCase()}</span>
           </span>
         </button>
       </div>

@@ -88,6 +88,58 @@
   --color-tg-green: var(--tg-green);
   --font-sans: var(--tg-font);
   --font-mono: var(--tg-font-mono);
+
+  /* ===== shadcn/ui token mapping (dashboard) ===== */
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+/* shadcn dark palette — Vercel/Apple: near-black, hairline borders, one
+   restrained violet accent. Scoped-safe: these names are unused by the
+   Telegram phone styles. */
+:root {
+  --radius: 0.625rem;
+  --card: #101012;
+  --card-foreground: #ededed;
+  --popover: #141416;
+  --popover-foreground: #ededed;
+  --primary: #fafafa;
+  --primary-foreground: #0a0a0a;
+  --secondary: #1c1c1f;
+  --secondary-foreground: #ededed;
+  --muted: #1a1a1d;
+  --muted-foreground: #8a8a90;
+  --accent: #1f1f23;
+  --accent-foreground: #fafafa;
+  --destructive: #ff5a5a;
+  --destructive-foreground: #fafafa;
+  --border: #232327;
+  --input: #2a2a2e;
+  --ring: #8b7bf0;
+  --brand: #8b7bf0;
+  --brand-foreground: #ffffff;
 }
 
 /* ===== Base ===== */
@@ -983,26 +1035,100 @@ body {
    =================================================================== */
 
 .dashboard-shell {
+  --preview-height: min(var(--iphone-16-pro-height), calc(100dvh - 40px));
   height: 100dvh;
-  min-height: 720px;
   display: grid;
-  grid-template-columns: 360px 402px 360px;
-  justify-content: center;
-  align-items: center;
-  gap: 22px;
-  padding: 20px 24px;
+  grid-template-columns: 360px 1fr 402px;
+  align-items: stretch;
+  gap: 24px;
+  padding: 24px;
   overflow: hidden;
   background:
-    radial-gradient(circle at 50% 8%, rgba(135, 116, 225, 0.18), transparent 30%),
-    #0b0b0f;
+    radial-gradient(ellipse at top left, rgba(135, 116, 225, 0.15), transparent 40%),
+    radial-gradient(ellipse at bottom right, rgba(135, 116, 225, 0.1), transparent 40%),
+    #050508;
 }
 
 .dashboard-panel {
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  background: rgba(20, 20, 25, 0.94);
-  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.32);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: linear-gradient(145deg, rgba(26, 26, 32, 0.9), rgba(18, 18, 22, 0.95));
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+/* LIQUID GLASS STYLES */
+.glass-panel {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+  box-shadow: 
+    0 8px 32px 0 rgba(0, 0, 0, 0.3),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border-radius: 24px;
+}
+
+.glass-card {
+  background: rgba(20, 20, 25, 0.4);
+  box-shadow: 
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.glass-label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.glass-input {
+  background: rgba(0, 0, 0, 0.3);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2), 0 1px 0 rgba(255, 255, 255, 0.05);
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 12px 14px;
+  color: white;
+  font-size: 14px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
+}
+
+.glass-input:focus {
+  outline: none;
+  border-color: rgba(135, 116, 225, 0.6);
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.2), 
+    0 0 0 4px rgba(135, 116, 225, 0.15),
+    0 1px 0 rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.glass-input[type="color"] {
+  padding: 4px;
+  height: 46px;
+  cursor: pointer;
+}
+
+.glass-btn {
+  background: linear-gradient(135deg, rgba(135, 116, 225, 0.9), rgba(106, 84, 214, 0.9));
+  box-shadow: 
+    0 4px 14px 0 rgba(135, 116, 225, 0.39),
+    inset 0 1px 1px rgba(255, 255, 255, 0.3);
+  transition: all 0.2s ease;
+}
+.glass-btn:hover {
+  background: linear-gradient(135deg, rgba(145, 126, 235, 1), rgba(116, 94, 224, 1));
+  box-shadow: 
+    0 6px 20px 0 rgba(135, 116, 225, 0.5),
+    inset 0 1px 1px rgba(255, 255, 255, 0.4);
 }
 
 .dashboard-sidebar,
@@ -1050,11 +1176,142 @@ body {
   left: 50%;
   width: 402px;
   height: 874px;
-  transform: translate(-50%, -50%) scale(var(--phone-scale, 1));
   transform-origin: center center;
+  border-radius: 44px;
+  z-index: 2;
+  /* Hidden + slightly shrunk until the scale is measured, then the .is-ready
+     class reveals it with a fade + gentle scale-up. Position stays fixed at
+     center (-50%,-50%) so there is no layout/positional shift. The iPhone rim
+     is a separate sibling (.phone-rim) that shares --phone-scale + centering,
+     so the screen's fixed-gradient anchor is left untouched. */
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(calc(var(--phone-scale, 1) * 0.96));
+  transition: opacity 0.55s ease, transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+}
+
+.dashboard-preview-wrap.is-ready > .chat-bg {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(var(--phone-scale, 1));
+}
+
+/* ── iPhone titanium frame ─────────────────────────────────────────────
+   Sits behind the 402x874 screen, same centre + same --phone-scale, so it
+   tracks the screen exactly without owning the transform the bubble gradient
+   depends on. Outer 424x896 → an ~11px rim/bezel ring around the screen. */
+.dashboard-preview-wrap > .phone-rim {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 420px;
+  height: 892px;
+  transform-origin: center center;
+  border-radius: 53px;
+  z-index: 1;
+  /* Thin brushed-titanium rim — kept narrow; most of the ring is black bezel. */
+  background: linear-gradient(
+    135deg,
+    #f2f2f5 0%,
+    #c2c2c9 20%,
+    #9a9aa1 40%,
+    #d5d5db 60%,
+    #8f8f96 82%,
+    #c8c8ce 100%
+  );
+  box-shadow: 0 34px 70px -18px rgba(0, 0, 0, 0.8),
+    inset 0 1px 1px rgba(255, 255, 255, 0.7);
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(calc(var(--phone-scale, 1) * 0.96));
+  transition: opacity 0.55s ease, transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+}
+
+.dashboard-preview-wrap.is-ready > .phone-rim {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(var(--phone-scale, 1));
+}
+
+/* Black bezel between rim and screen. */
+/* Uniform black bezel band (2px silver rim + 7px black all around). */
+.phone-rim::before {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border-radius: 51px;
+  background: #030304;
+}
+
+/* Physical side buttons (mute / volume / power). */
+.phone-rim__btn {
+  position: absolute;
+  width: 3px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #9a9aa1, #7d7d84);
+}
+.phone-rim__btn--mute {
+  left: -2px;
+  top: 96px;
+  height: 26px;
+}
+.phone-rim__btn--vup {
+  left: -2px;
+  top: 150px;
+  height: 56px;
+}
+.phone-rim__btn--vdown {
+  left: -2px;
+  top: 220px;
+  height: 56px;
+}
+.phone-rim__btn--power {
+  right: -2px;
+  top: 188px;
+  height: 96px;
+}
+
+/* ── Phone loader ────────────────────────────────────────────────────── */
+/* Fixed-size overlay pinned to the frame center — no content, so nothing can
+   reflow or shift. Just a spinner that fades out on reveal. */
+.phone-loader {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
   border-radius: 28px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
+  background: linear-gradient(160deg, #1c1c1f 0%, #161618 100%);
+  opacity: 1;
+  transition: opacity 0.45s ease;
+  z-index: 5;
+}
+
+.dashboard-preview-wrap.is-ready > .phone-loader {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.phone-loader__spinner {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.12);
+  border-top-color: #8774e1;
+  animation: phone-loader-spin 0.8s linear infinite;
+}
+
+@keyframes phone-loader-spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-preview-wrap > .chat-bg {
+    transition: opacity 0.2s ease;
+    transform: translate(-50%, -50%) scale(var(--phone-scale, 1));
+  }
+  .phone-loader__spinner {
+    animation-duration: 1.6s;
+  }
 }
 
 .dashboard-preview-label {
@@ -1211,4 +1468,279 @@ body {
 .dashboard-queue button.is-active {
   outline: 2px solid rgba(135, 116, 225, 0.62);
   background: rgba(135, 116, 225, 0.14);
+}
+
+/* ===================================================================
+   DASHBOARD CHROME — Vercel/Apple aesthetic (flat, hairline, monochrome)
+   Layout/sizing lives here; component appearance comes from shadcn/ui.
+   =================================================================== */
+
+.dashboard-shell {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter",
+    system-ui, sans-serif;
+  letter-spacing: -0.011em;
+  -webkit-font-smoothing: antialiased;
+  color: var(--foreground);
+  gap: 16px;
+  padding: 16px;
+  /* Near-black with one faint violet light-leak at the top — barely there. */
+  background:
+    radial-gradient(70% 40% at 50% -10%, rgba(139, 123, 240, 0.1), transparent 60%),
+    #0a0a0a;
+}
+
+/* Column surfaces — flat, hairline border, subtle elevation. */
+.dashboard-sidebar,
+.dashboard-messages {
+  height: min(874px, calc(100dvh - 32px));
+  max-height: 874px;
+  min-height: 680px;
+  overflow: auto;
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: #0c0c0e;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.02) inset,
+    0 20px 50px -30px rgba(0, 0, 0, 0.8);
+}
+
+/* Solid sticky headers that bleed to the column edges. */
+.dash-sticky-head {
+  position: sticky;
+  top: -18px;
+  margin: -18px -18px 0;
+  padding: 16px 18px;
+  z-index: 10;
+  background: #0c0c0e;
+  border-bottom: 1px solid var(--border);
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+}
+
+.dashboard-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+}
+
+/* Native color swatch input, restyled to match shadcn inputs. */
+.dash-color {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 36px;
+  padding: 3px;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-md);
+  background: transparent;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+.dash-color:hover {
+  border-color: var(--muted-foreground);
+}
+.dash-color::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+.dash-color::-webkit-color-swatch {
+  border: none;
+  border-radius: calc(var(--radius-md) - 3px);
+}
+
+/* Native date input — dark calendar UI + visible picker indicator. */
+.dash-date {
+  color-scheme: dark;
+}
+.dash-date::-webkit-calendar-picker-indicator {
+  opacity: 0.55;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+.dash-date::-webkit-calendar-picker-indicator:hover {
+  opacity: 0.9;
+}
+
+/* ===================================================================
+   APP SHELL — icon rail + workspace + preview dock (multi-tool)
+   =================================================================== */
+
+.app-shell {
+  height: 100dvh;
+  display: flex;
+  overflow: hidden;
+  color: var(--foreground);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter",
+    system-ui, sans-serif;
+  letter-spacing: -0.011em;
+  -webkit-font-smoothing: antialiased;
+  background:
+    radial-gradient(70% 40% at 50% -10%, rgba(139, 123, 240, 0.1), transparent 60%),
+    #0a0a0a;
+}
+
+/* ── Left icon rail ─────────────────────────────────────────────── */
+.app-rail {
+  width: 64px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 0;
+  border-right: 1px solid var(--border);
+  background: rgba(10, 10, 12, 0.6);
+}
+
+.app-rail__logo {
+  display: grid;
+  place-items: center;
+  margin-bottom: 6px;
+}
+.app-rail__logo-mark {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  background: linear-gradient(135deg, var(--brand), #6a54d6);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  box-shadow: 0 4px 14px -4px rgba(139, 123, 240, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.app-rail__group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.app-rail__group--bottom {
+  margin-top: auto;
+}
+
+.app-rail__item {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  color: var(--muted-foreground);
+  transition: background 0.18s ease, color 0.18s ease;
+}
+.app-rail__item:hover {
+  background: var(--accent);
+  color: var(--foreground);
+}
+.app-rail__item.is-active {
+  background: rgba(139, 123, 240, 0.16);
+  color: var(--brand);
+  box-shadow: inset 0 0 0 1px rgba(139, 123, 240, 0.3);
+}
+.app-rail__item.is-disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.app-rail__item.is-disabled:hover {
+  background: transparent;
+  color: var(--muted-foreground);
+}
+
+.app-rail__credits {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 6px 0;
+  color: var(--muted-foreground);
+}
+.app-rail__credits-num {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+.app-rail__avatar {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2a2a2e, #1a1a1d);
+  border: 1px solid var(--border);
+  color: var(--foreground);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ── Workspace + per-tool grid ──────────────────────────────────── */
+.app-workspace {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 16px;
+  overflow: hidden;
+}
+
+.workspace-grid {
+  height: 100%;
+  display: grid;
+  grid-template-columns: 340px minmax(0, 1fr) 452px;
+  gap: 16px;
+}
+
+/* Columns fill the shell height instead of the old fixed 874px cap. */
+.workspace-grid .dashboard-sidebar,
+.workspace-grid .dashboard-messages {
+  height: 100%;
+  max-height: none;
+  min-height: 0;
+}
+
+/* ── Preview dock (right column) ────────────────────────────────── */
+.preview-dock {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  min-height: 0;
+}
+.preview-dock .dashboard-preview-wrap {
+  flex: 1;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  max-height: none;
+}
+.download-cta {
+  width: 100%;
+  flex: none;
+}
+
+/* ── AI Reviews result cards ────────────────────────────────────── */
+.result-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+}
+.result-card:hover {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: #141416;
+}
+.result-card:focus-visible {
+  box-shadow: 0 0 0 2px rgba(139, 123, 240, 0.4);
+}
+.result-card.is-active {
+  border-color: var(--brand);
+  box-shadow: inset 0 0 0 1px var(--brand),
+    0 10px 26px -14px rgba(139, 123, 240, 0.6);
 }

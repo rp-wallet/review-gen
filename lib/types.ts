@@ -4,6 +4,7 @@ export type ReviewMessage = {
   time: string;
   date: string;
   replyTo?: number;
+  isPinned?: boolean;
 };
 
 export type ReviewSet = {
@@ -19,4 +20,11 @@ export type ScreenshotInput = {
   name: string;
   mimeType: string;
   data: string;
+};
+
+export type GenerationResult = {
+  confidence?: number;
+  toneTags?: string[];
+  notes?: string;
+  sets: ReviewSet[];
 };
