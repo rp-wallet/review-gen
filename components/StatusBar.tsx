@@ -18,7 +18,7 @@ export default function StatusBar() {
         <div
           className="rounded-full bg-black"
           style={{
-            width: '122px',
+            width: '118px',
             height: '35px',
           }}
         />

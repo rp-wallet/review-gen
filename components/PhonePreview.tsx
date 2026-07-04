@@ -1,7 +1,6 @@
 'use client';
 
 import { memo, useLayoutEffect, useRef, useState } from 'react';
-import { toPng } from 'html-to-image';
 import { Download, Loader2 } from 'lucide-react';
 import ChatCanvas from '@/components/ChatCanvas';
 import { Button } from '@/components/ui/button';
@@ -19,16 +18,6 @@ interface PhonePreviewProps {
   botAvatarImage?: string;
   showProfileIntro?: boolean;
   downloadName?: string;
-}
-
-async function waitForImages(node: HTMLElement) {
-  const images = Array.from(node.querySelectorAll('img'));
-  await Promise.all(
-    images.map(async (image) => {
-      if (image.complete) return;
-      await image.decode().catch(() => undefined);
-    })
-  );
 }
 
 function nextFrame() {
@@ -58,6 +47,13 @@ function syncChatScroll(source: HTMLElement, target: HTMLElement) {
   targetScroll.scrollLeft = sourceScroll.scrollLeft;
 }
 
+function getChatScrollBottomOffset(node: HTMLElement) {
+  const scroll = node.querySelector<HTMLElement>('.chat-scroll');
+  if (!scroll) return 0;
+
+  return Math.max(0, scroll.scrollHeight - scroll.clientHeight - scroll.scrollTop);
+}
+
 function createExportClone(node: HTMLElement) {
   const clone = node.cloneNode(true) as HTMLElement;
 
@@ -72,25 +68,8 @@ function createExportClone(node: HTMLElement) {
     transform: 'none',
     opacity: '1',
     transition: 'none',
-    borderRadius: '44px',
+    borderRadius: '55px',
     overflow: 'hidden',
-  });
-
-  // html-to-image (SVG foreignObject) fails to render CSS backdrop-filter on Chrome/WebKit.
-  // It results in solid black/gray boxes. We must strip the blur and use an opaque gradient fallback.
-  clone.querySelectorAll<HTMLElement>('.chat-glass').forEach((glass) => {
-    glass.style.backdropFilter = 'none';
-    glass.style.setProperty('-webkit-backdrop-filter', 'none');
-    glass.style.maskImage = 'none';
-    glass.style.setProperty('-webkit-mask-image', 'none');
-
-    if (glass.classList.contains('chat-glass--top')) {
-      glass.style.background =
-        'linear-gradient(to bottom, rgba(16,16,18,0.96) 0%, rgba(16,16,18,0.85) 60%, rgba(16,16,18,0.4) 85%, rgba(16,16,18,0) 100%)';
-    } else {
-      glass.style.background =
-        'linear-gradient(to top, rgba(16,16,18,0.98) 0%, rgba(16,16,18,0.9) 60%, rgba(16,16,18,0.4) 85%, rgba(16,16,18,0) 100%)';
-    }
   });
 
   return clone;
@@ -157,20 +136,40 @@ export default function PhonePreview({
       syncChatScroll(node, exportNode);
       await nextFrame();
       await document.fonts.ready;
-      await waitForImages(exportNode);
 
-      const dataUrl = await toPng(exportNode, {
-        width: SCREEN_WIDTH,
-        height: SCREEN_HEIGHT,
-        pixelRatio: 2,
-        cacheBust: true,
+      // Extract styles and HTML
+      const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
+        .map(el => el.outerHTML)
+        .join('\n');
+      const html = exportNode.outerHTML;
+      const scrollBottomOffset = getChatScrollBottomOffset(node);
+
+      const response = await fetch('/api/export', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          html,
+          styles,
+          width: SCREEN_WIDTH,
+          height: SCREEN_HEIGHT,
+          scrollBottomOffset,
+        })
       });
+
+      if (!response.ok) {
+        throw new Error('Export failed on server');
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+
       const link = document.createElement('a');
       link.download = `${downloadName}.png`;
-      link.href = dataUrl;
+      link.href = url;
       document.body.appendChild(link);
       link.click();
       link.remove();
+      URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Unable to export screenshot', error);
     } finally {

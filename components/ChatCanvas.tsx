@@ -63,7 +63,7 @@ export default function ChatCanvas({
         className="chat-glass chat-glass--top absolute top-0 left-0 w-full z-40 pointer-events-none"
         style={{
           height: '160px',
-          backgroundColor: 'rgba(0,0,0, 0.6)',
+          backgroundColor: 'rgba(0,0,0, 0.55)',
           backdropFilter: 'blur(2px)',
           WebkitBackdropFilter: 'blur(2px)',
           maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%)',
@@ -162,8 +162,8 @@ export default function ChatCanvas({
       <div
         className="chat-glass chat-glass--bottom absolute bottom-0 left-0 w-full z-40 pointer-events-none"
         style={{
-          height: '60px',
-          backgroundColor: 'rgba(0,0,0, 0.6)',
+          height: '85px',
+          backgroundColor: 'rgba(0,0,0, 0.55)',
           backdropFilter: 'blur(2px)',
           WebkitBackdropFilter: 'blur(2px)',
           maskImage: 'linear-gradient(to top, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 100%)',

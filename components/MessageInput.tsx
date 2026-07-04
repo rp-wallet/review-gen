@@ -1,7 +1,8 @@
 "use client";
 
+import Image from 'next/image';
 import React, { useState, useRef, useEffect } from 'react';
-import { Paperclip, Sticker, Mic, Send } from 'lucide-react';
+import { Paperclip, Mic, Send } from 'lucide-react';
 
 export default function MessageInput() {
   const [message, setMessage] = useState('');
@@ -21,7 +22,7 @@ export default function MessageInput() {
 
       {/* Attach */}
       <button className="liquid-glass liquid-glass--gray flex items-center justify-center size-[42px] rounded-full shrink-0 text-white transition-transform duration-200 active:scale-95">
-        <Paperclip className="relative z-[1] w-[22px] h-[22px]" strokeWidth={2} />
+        <Paperclip className="relative z-[1] w-[24px] h-[24px]" strokeWidth={1.5} />
       </button>
 
       {/* Input pill */}
@@ -36,7 +37,15 @@ export default function MessageInput() {
           style={{ fontFamily: 'var(--tg-font)' }}
         />
         <button className="relative z-[1] flex items-center justify-center size-[32px] rounded-full text-[var(--tg-text-secondary)] hover:text-white transition-colors duration-200 shrink-0 ml-1">
-          <Sticker className="w-[22px] h-[22px]" strokeWidth={2} />
+          <Image
+            src="/telegram-sticker-logo.png"
+            alt=""
+            width={24}
+            height={24}
+            unoptimized
+            aria-hidden="true"
+            className="w-[24px] h-[24px] opacity-80"
+          />
         </button>
       </div>
 
@@ -53,7 +62,7 @@ export default function MessageInput() {
         {message.trim() ? (
           <Send className="relative z-[1] w-[20px] h-[20px] ml-[2px]" strokeWidth={2} />
         ) : (
-          <Mic className="relative z-[1] w-[20px] h-[20px]" strokeWidth={2} />
+          <Mic className="relative z-[1] size-[26px]" strokeWidth={1.5} />
         )}
       </button>
     </div>

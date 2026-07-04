@@ -1177,7 +1177,7 @@ body {
   width: 402px;
   height: 874px;
   transform-origin: center center;
-  border-radius: 44px;
+  border-radius: 55px;
   z-index: 2;
   /* Hidden + slightly shrunk until the scale is measured, then the .is-ready
      class reveals it with a fade + gentle scale-up. Position stays fixed at
@@ -1196,30 +1196,50 @@ body {
 }
 
 /* ── iPhone titanium frame ─────────────────────────────────────────────
-   Sits behind the 402x874 screen, same centre + same --phone-scale, so it
-   tracks the screen exactly without owning the transform the bubble gradient
-   depends on. Outer 424x896 → an ~11px rim/bezel ring around the screen. */
+   Premium 3D titanium mockup frame. Sits behind the 402×874 screen at the
+   same centre + --phone-scale. Outer 432×904 → ~15px bezel all around.
+   Multiple layers create realistic metallic depth:
+   1. Outer titanium gradient (the visible metal band)
+   2. Inner black bezel (glass-to-frame transition)
+   3. Subtle inner glow ring (glass edge reflection)  */
 .dashboard-preview-wrap > .phone-rim {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 420px;
-  height: 892px;
+  width: 432px;
+  height: 904px;
   transform-origin: center center;
-  border-radius: 53px;
+  border-radius: 64px;
   z-index: 1;
-  /* Thin brushed-titanium rim — kept narrow; most of the ring is black bezel. */
+
+  /* Titanium metal gradient — lighter mid-gray tones with a brighter
+     top-left highlight that simulates studio lighting on brushed metal.
+     The range is intentionally brighter so the frame is clearly visible
+     against the dark dashboard background. */
   background: linear-gradient(
-    135deg,
-    #f2f2f5 0%,
-    #c2c2c9 20%,
-    #9a9aa1 40%,
-    #d5d5db 60%,
-    #8f8f96 82%,
-    #c8c8ce 100%
+    145deg,
+    #8a8a94 0%,
+    #6e6e78 12%,
+    #58585f 28%,
+    #6a6a72 42%,
+    #50505a 55%,
+    #5e5e68 68%,
+    #4e4e56 82%,
+    #62626c 94%,
+    #4a4a54 100%
   );
-  box-shadow: 0 34px 70px -18px rgba(0, 0, 0, 0.8),
-    inset 0 1px 1px rgba(255, 255, 255, 0.7);
+
+  /* Multi-layered shadow for floating-device depth effect:
+     1. Wide ambient shadow (ground contact)
+     2. Tight diffuse glow
+     3. Top highlight (studio light reflection on top edge) */
+  box-shadow:
+    0 40px 80px -15px rgba(0, 0, 0, 0.85),
+    0 20px 40px -10px rgba(0, 0, 0, 0.6),
+    0 0 60px -10px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4);
+
   opacity: 0;
   transform: translate(-50%, -50%) scale(calc(var(--phone-scale, 1) * 0.96));
   transition: opacity 0.55s ease, transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
@@ -1231,14 +1251,35 @@ body {
   transform: translate(-50%, -50%) scale(var(--phone-scale, 1));
 }
 
-/* Black bezel between rim and screen. */
-/* Uniform black bezel band (2px silver rim + 7px black all around). */
+/* Black bezel between rim and screen — the recessed glass effect.
+   A thicker bezel (4px titanium edge + 11px deep black) creates the
+   realistic depth of a phone screen sitting inside the frame. */
 .phone-rim::before {
   content: "";
   position: absolute;
-  inset: 2px;
-  border-radius: 51px;
-  background: #030304;
+  inset: 3px;
+  border-radius: 61px;
+  background: #0a0a0c;
+  /* Subtle inner shadow to create the "sunken glass" illusion */
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.9),
+    inset 0 -1px 3px rgba(255, 255, 255, 0.05);
+}
+
+/* Inner screen edge glow — a subtle bright ring right where
+   the screen glass meets the bezel, mimicking light catching the
+   chamfered edge of the display glass. */
+.phone-rim::after {
+  content: "";
+  position: absolute;
+  /* Positioned to sit exactly around the 402×874 screen area */
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  border-radius: 53px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  pointer-events: none;
 }
 
 /* Physical side buttons (mute / volume / power). */
@@ -1246,27 +1287,30 @@ body {
   position: absolute;
   width: 3px;
   border-radius: 2px;
-  background: linear-gradient(180deg, #9a9aa1, #7d7d84);
+  background: linear-gradient(180deg, #6e6e78, #50505a, #6e6e78);
+  box-shadow: -1px 0 2px rgba(0, 0, 0, 0.5);
 }
 .phone-rim__btn--mute {
-  left: -2px;
-  top: 96px;
-  height: 26px;
+  left: -3px;
+  top: 110px;
+  height: 28px;
 }
 .phone-rim__btn--vup {
-  left: -2px;
-  top: 150px;
-  height: 56px;
+  left: -3px;
+  top: 168px;
+  height: 58px;
 }
 .phone-rim__btn--vdown {
-  left: -2px;
-  top: 220px;
-  height: 56px;
+  left: -3px;
+  top: 240px;
+  height: 58px;
 }
 .phone-rim__btn--power {
-  right: -2px;
-  top: 188px;
-  height: 96px;
+  right: -3px;
+  top: 200px;
+  height: 100px;
+  background: linear-gradient(180deg, #6e6e78, #50505a, #6e6e78);
+  box-shadow: 1px 0 2px rgba(0, 0, 0, 0.5);
 }
 
 /* ── Phone loader ────────────────────────────────────────────────────── */
