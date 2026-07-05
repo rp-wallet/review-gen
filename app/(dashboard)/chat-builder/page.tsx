@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ReviewSet, ReviewMessage } from '@/lib/types';
 import PhonePreview from '@/components/PhonePreview';
 import WorkspaceHeader from '@/components/WorkspaceHeader';
@@ -17,6 +17,7 @@ import {
   Download,
   Loader2,
   PencilLine,
+  RotateCcw,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -40,6 +41,25 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+const BUILDER_IMPORT_KEY = 'reviewmockup:builder-import';
+
+type BuilderImport = {
+  review?: ReviewSet;
+  botName?: string;
+  botAvatarInitial?: string;
+  botAvatarColor?: string;
+  botAvatarImage?: string;
+  showProfileIntro?: boolean;
+};
+
+function cleanMessages(messages: ReviewMessage[]) {
+  return messages.map((message) => {
+    const next = { ...message };
+    delete next.replyTo;
+    return next;
+  });
+}
+
 export default function ChatBuilderPage() {
   const [customerName, setCustomerName] = useState('Marketing Pro');
   const [avatarInitial, setAvatarInitial] = useState('M');
@@ -47,14 +67,13 @@ export default function ChatBuilderPage() {
   const [pinnedText, setPinnedText] = useState('🆔 998877665 🤑 @marketing_pro 👤 Marketing Pro ✅ Pro Plan 🌐 Language: en');
   const [showProfileIntro, setShowProfileIntro] = useState(true);
 
-  const [botName, setBotName] = useState('ReviewGenBot');
+  const [botName, setBotName] = useState('ReviewMockupBot');
   const [botAvatarInitial, setBotAvatarInitial] = useState('R');
   const [botAvatarColor, setBotAvatarColor] = useState('#8774e1');
   const [botAvatarImage, setBotAvatarImage] = useState<string>('');
 
   const [messages, setMessages] = useState<ReviewMessage[]>([
-    { sender: 'customer', text: '', time: '09:00 AM', date: 'Oct 12' },
-    { sender: 'customer', text: "Welcome to ReviewGen! 👋 I'm here to show you how to build realistic, beautiful Telegram chat mockups in seconds.", time: '09:00 AM', date: 'Oct 12' },
+    { sender: 'customer', text: "Welcome to ReviewMockup! 👋 I'm here to show you how to build realistic, beautiful Telegram chat mockups in seconds.", time: '09:00 AM', date: 'Oct 12' },
     { sender: 'support', text: "That sounds awesome! We definitely need better visuals for our landing page. How does it work?", time: '09:02 AM', date: 'Oct 12' },
     { sender: 'customer', text: "It's super easy! Click any message in the Conversation list on the left to edit it in the panel on the right.", time: '09:03 AM', date: 'Oct 12' },
     { sender: 'support', text: "Yes, I see it.", time: '09:03 AM', date: 'Oct 12' },
@@ -70,7 +89,7 @@ export default function ChatBuilderPage() {
     { sender: 'support', text: "Let me guess... I can also adjust the timestamps?", time: '09:15 AM', date: 'Oct 12' },
     { sender: 'customer', text: "Exactly! You can tweak the time for every single message. You can even add date separators.", time: '09:16 AM', date: 'Oct 12' },
     { sender: 'support', text: "This is so much better than trying to manually edit HTML or piece together screenshots in Figma.", time: '09:20 AM', date: 'Oct 12' },
-    { sender: 'customer', text: "That's exactly why we built ReviewGen! It saves hours of design time.", time: '09:22 AM', date: 'Oct 12' },
+    { sender: 'customer', text: "That's exactly why we built ReviewMockup! It saves hours of design time.", time: '09:22 AM', date: 'Oct 12' },
     { sender: 'support', text: "Once I have the perfect conversation built out, how do I export it?", time: '09:25 AM', date: 'Oct 12' },
     { sender: 'customer', text: "It's all rendered live in the Phone Preview canvas in the center of your screen.", time: '09:26 AM', date: 'Oct 12' },
     { sender: 'customer', text: "We've carefully designed the preview to mimic a native iOS Telegram experience.", time: '09:26 AM', date: 'Oct 12' },
@@ -88,6 +107,40 @@ export default function ChatBuilderPage() {
 
   const selected = selectedIdx !== null ? messages[selectedIdx] : null;
 
+  useEffect(() => {
+    const raw = window.localStorage.getItem(BUILDER_IMPORT_KEY);
+    if (!raw) return;
+
+    let timeout: number | undefined;
+    try {
+      const payload = JSON.parse(raw) as BuilderImport;
+      const imported = payload.review;
+      if (!imported?.messages?.length) return;
+
+      timeout = window.setTimeout(() => {
+        setCustomerName(imported.customerName || 'Customer');
+        setAvatarInitial((imported.customerName || 'C').slice(0, 1).toUpperCase());
+        setPinnedText(imported.pinnedText || '');
+        setShowProfileIntro(Boolean(payload.showProfileIntro && imported.pinnedText));
+        setBotName(payload.botName || 'ReviewMockupBot');
+        setBotAvatarInitial(payload.botAvatarInitial || 'R');
+        setBotAvatarColor(payload.botAvatarColor || '#8774e1');
+        setBotAvatarImage(payload.botAvatarImage || '');
+        setMessages(cleanMessages(imported.messages));
+        setSelectedIdx(null);
+        setDragIdx(null);
+      }, 0);
+    } catch (error) {
+      console.error('Unable to import review into chat builder', error);
+    } finally {
+      window.localStorage.removeItem(BUILDER_IMPORT_KEY);
+    }
+
+    return () => {
+      if (timeout !== undefined) window.clearTimeout(timeout);
+    };
+  }, []);
+
   const handleBotAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -103,6 +156,12 @@ export default function ChatBuilderPage() {
       { sender: 'customer', text: '', time: '12:00 PM', date: 'June 25', isPinned: false },
     ]);
     setSelectedIdx(messages.length);
+  };
+
+  const resetConversation = () => {
+    setMessages([]);
+    setSelectedIdx(null);
+    setDragIdx(null);
   };
 
   const updateMessage = (index: number, field: keyof ReviewMessage, value: string | boolean) => {
@@ -193,7 +252,14 @@ export default function ChatBuilderPage() {
             </Button>
           </div>
 
-          <div className="panel-scroll">
+          <div
+            className="panel-scroll"
+            onScroll={(e) => {
+              const t = e.currentTarget;
+              const isBottom = Math.abs(t.scrollHeight - t.scrollTop - t.clientHeight) < 2;
+              t.classList.toggle('is-bottom', isBottom);
+            }}
+          >
           <div className="msg-list">
             {messages.map((msg, idx) => {
               const incoming = msg.sender === 'customer';
@@ -301,7 +367,14 @@ export default function ChatBuilderPage() {
             )}
           </div>
 
-          <div className="panel-scroll">
+          <div
+            className="panel-scroll"
+            onScroll={(e) => {
+              const t = e.currentTarget;
+              const isBottom = Math.abs(t.scrollHeight - t.scrollTop - t.clientHeight) < 2;
+              t.classList.toggle('is-bottom', isBottom);
+            }}
+          >
           <div className="flex flex-col gap-4">
             {selected ? (
               <Card>
@@ -457,16 +530,35 @@ export default function ChatBuilderPage() {
               </CardHeader>
               <CardContent className="flex flex-col gap-4 pt-0">
                 <label htmlFor="profile-intro" className="flex cursor-pointer items-center justify-between gap-3">
-                  <span className="text-[13px] text-foreground">Rich profile intro</span>
+                  <span className="text-[13px] text-foreground">Pinned chat</span>
                   <Switch id="profile-intro" checked={showProfileIntro} onCheckedChange={setShowProfileIntro} />
                 </label>
                 <Separator />
                 <div className="flex flex-col gap-2">
-                  <Label htmlFor="pinned-text">Top bar text</Label>
-                  <Textarea id="pinned-text" className="min-h-16" value={pinnedText} onChange={(e) => setPinnedText(e.target.value)} />
+                  <Label htmlFor="pinned-text">Pinned profile text</Label>
+                  <Textarea
+                    id="pinned-text"
+                    className="min-h-16"
+                    value={pinnedText}
+                    onChange={(e) => setPinnedText(e.target.value)}
+                    disabled={!showProfileIntro}
+                  />
                 </div>
               </CardContent>
             </Card>
+
+            {!selected && (
+              <Button
+                variant="destructive"
+                size="lg"
+                onClick={resetConversation}
+                disabled={!messages.length}
+                className="w-full border-red-200/15 bg-red-500/18 text-red-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_8px_22px_-14px_rgba(255,80,80,0.8)] hover:bg-red-500/24 hover:text-white"
+              >
+                <RotateCcw size={15} />
+                Reset
+              </Button>
+            )}
           </div>
           </div>
         </aside>

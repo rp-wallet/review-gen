@@ -16,6 +16,7 @@ interface PhonePreviewProps {
   botAvatarColor?: string;
   botAvatarImage?: string;
   showProfileIntro?: boolean;
+  blurNames?: boolean;
   downloadName?: string;
   /** Hide the built-in CTA when the page renders its own export button. */
   hideCta?: boolean;
@@ -30,6 +31,7 @@ export default function PhonePreview({
   botAvatarColor,
   botAvatarImage,
   showProfileIntro,
+  blurNames = false,
   downloadName = 'review',
   hideCta = false,
   hostRef,
@@ -97,6 +99,7 @@ export default function PhonePreview({
           botAvatarColor={botAvatarColor}
           botAvatarImage={botAvatarImage}
           showProfileIntro={showProfileIntro}
+          blurNames={blurNames}
         />
       </div>
 

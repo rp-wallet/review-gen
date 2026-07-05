@@ -1,23 +1,16 @@
 import type { Metadata } from "next";
-import { Roboto, Roboto_Mono } from "next/font/google";
+import { Manrope } from "next/font/google";
 import "./globals.css";
 
-const roboto = Roboto({
-  weight: ["400", "500", "700"],
+const manrope = Manrope({
   subsets: ["latin"],
-  variable: "--font-roboto",
-  display: "swap",
-});
-
-const robotoMono = Roboto_Mono({
-  subsets: ["latin"],
-  variable: "--font-roboto-mono",
+  variable: "--font-manrope",
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Telegram Chat",
-  description: "Telegram Web Clone",
+  title: "ReviewMockup",
+  description: "Create realistic chat review mockups.",
 };
 
 export default function RootLayout({
@@ -28,7 +21,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${roboto.variable} ${robotoMono.variable} h-full`}
+      className={`${manrope.variable} h-full`}
     >
       <body className="min-h-full">{children}</body>
     </html>

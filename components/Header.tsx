@@ -1,5 +1,6 @@
 import React from 'react';
 import { ChevronLeft } from 'lucide-react';
+import MosaicText from '@/components/MosaicText';
 
 interface HeaderProps {
   title: string;
@@ -7,12 +8,13 @@ interface HeaderProps {
   unreadCount?: number;
   avatarInitial?: string;
   avatarColor?: string;
+  blurName?: boolean;
 }
 
 export default function Header({
   title = "Alfz",
   subtitle = "In Larper_wallet_support_team",
-  unreadCount = 154
+  blurName = false,
 }: HeaderProps) {
   return (
     <div
@@ -32,7 +34,9 @@ export default function Header({
       <div
         className="liquid-glass flex flex-1 flex-col min-w-[160px] justify-center items-center h-[40px] rounded-full overflow-hidden shrink-0"
       >
-        <span className="relative z-[1] text-[16px] font-medium leading-[20px] text-white truncate px-4 tracking-[-0.01em]">{title}</span>
+        <span className="relative z-[1] text-[15.5px] font-medium leading-[20px] text-white truncate px-4 tracking-[-0.01em]">
+          {blurName ? <MosaicText text={title} className="mosaic-text--header" /> : title}
+        </span>
         <span className="relative z-[1] text-[12px] leading-[15px] text-[#dddaf1] truncate px-4 -translate-y-0.5">{subtitle}</span>
       </div>
 

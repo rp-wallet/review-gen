@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -29,9 +30,18 @@ export default function AppRail() {
   return (
     <nav className="app-sidebar" aria-label="Tools">
       <Link href="/chat-builder" className="app-sidebar__brand" aria-label="Home">
-        <span className="app-sidebar__logo-mark">RP</span>
+        <span className="app-sidebar__logo-mark">
+          <Image
+            src="/reviewmockup-logo.png"
+            alt=""
+            width={36}
+            height={36}
+            priority
+            className="app-sidebar__logo-image"
+          />
+        </span>
         <span className="min-w-0">
-          <span className="app-sidebar__brand-name block truncate">ReviewGen</span>
+          <span className="app-sidebar__brand-name block truncate">ReviewMockup</span>
           <span className="app-sidebar__brand-sub block truncate">
             Chat mockups in seconds
           </span>
@@ -75,7 +85,7 @@ export default function AppRail() {
         <div className="app-sidebar__account" title="Account">
           <span className="app-sidebar__avatar">N</span>
           <span className="min-w-0">
-            <span className="app-sidebar__account-name block truncate">ReviewGen</span>
+            <span className="app-sidebar__account-name block truncate">ReviewMockup</span>
             <span className="app-sidebar__account-sub">
               <Coins size={11} />
               ∞ credits · Pro

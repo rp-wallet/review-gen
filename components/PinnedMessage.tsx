@@ -1,10 +1,28 @@
-import { Pin, X } from 'lucide-react';
+import { X } from 'lucide-react';
+import MosaicText from '@/components/MosaicText';
 
 interface PinnedMessageProps {
   text?: string;
+  blurNames?: boolean;
 }
 
-export default function PinnedMessage({ text }: PinnedMessageProps) {
+function pinnedPreview(text: string, blurNames: boolean) {
+  if (!blurNames) return text;
+
+  const username = text.match(/@[A-Za-z0-9_]+/)?.[0];
+  if (!username) return text;
+
+  return (
+    <>
+      {text.slice(0, text.indexOf(username))}
+      <MosaicText text={username} className="mosaic-text--inline" />
+    </>
+  );
+}
+
+export default function PinnedMessage({ text, blurNames = false }: PinnedMessageProps) {
+  const previewText = text || '🆔 1359404829 🤑 @alfz56 👤 Alfz ✅ Telegram Premium User 🌐 Language: en';
+
   return (
     <div
       className="liquid-glass flex items-center w-full cursor-pointer relative text-[var(--tg-text)] shrink-0 z-[2]"
@@ -25,7 +43,7 @@ export default function PinnedMessage({ text }: PinnedMessageProps) {
             <span className="text-white text-[14px] leading-[19px] truncate">Pinned Message</span>
           </div>
           <div className="text-[14px] leading-[18px] text-[#c8c8cc] truncate">
-            {text || '🆔 1359404829 🤑 @alfz56 👤 Alfz ✅ Telegram Premium User 🌐 Language: en'}
+            {pinnedPreview(previewText, blurNames)}
           </div>
         </div>
       </div>

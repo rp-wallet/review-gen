@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Sparkles,
   Bot,
@@ -13,6 +14,7 @@ import {
   AlertTriangle,
   CalendarDays,
   Download,
+  PencilLine,
 } from 'lucide-react';
 import { ReviewSet, GenerationResult } from '@/lib/types';
 import PhonePreview from '@/components/PhonePreview';
@@ -31,6 +33,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 
 type ExampleImage = {
   id: string;
@@ -78,6 +81,8 @@ function formatISOToLabel(iso: string): string {
 }
 
 export default function AiReviewsPage() {
+  const router = useRouter();
+
   // Bot identity (preview only — not sent to the model)
   const [botName, setBotName] = useState('LarperWallet_bot');
   const [botAvatarInitial, setBotAvatarInitial] = useState('L');
@@ -89,6 +94,9 @@ export default function AiReviewsPage() {
   const [productDesc, setProductDesc] = useState('A wallet app. Casual Telegram support chats that end in a positive review.');
   const [examples, setExamples] = useState<ExampleImage[]>([]);
   const [count, setCount] = useState(5);
+  const [minMessages, setMinMessages] = useState(15);
+  const [maxMessages, setMaxMessages] = useState(24);
+  const [blurNames, setBlurNames] = useState(false);
 
   // Generation state
   const [loading, setLoading] = useState(false);
@@ -158,6 +166,35 @@ export default function AiReviewsPage() {
 
   const removeExample = (id: string) => setExamples((prev) => prev.filter((x) => x.id !== id));
 
+  const setMinMessageCount = (value: number) => {
+    const next = Math.max(15, Math.min(60, Number(value) || 15));
+    setMinMessages(next);
+    setMaxMessages((prev) => Math.max(next, prev));
+  };
+
+  const setMaxMessageCount = (value: number) => {
+    const next = Math.max(minMessages, Math.min(60, Number(value) || minMessages));
+    setMaxMessages(next);
+  };
+
+  const editSelectedReview = () => {
+    if (!selected.messages.length) return;
+
+    window.localStorage.setItem(
+      'reviewmockup:builder-import',
+      JSON.stringify({
+        review: selected,
+        botName,
+        botAvatarInitial,
+        botAvatarColor,
+        botAvatarImage,
+        showProfileIntro: true,
+        blurNames,
+      })
+    );
+    router.push('/chat-builder');
+  };
+
   const generate = async () => {
     setLoading(true);
     setError('');
@@ -169,6 +206,8 @@ export default function AiReviewsPage() {
           product: productName,
           stylePrompt: productDesc,
           count,
+          minMessages,
+          maxMessages,
           screenshots: examples.map(({ mimeType, data }) => ({ mimeType, data })),
         }),
       });
@@ -227,16 +266,22 @@ export default function AiReviewsPage() {
               </h2>
               <p className="text-[12px] text-muted-foreground">Select one to preview it</p>
             </div>
-            {result?.toneTags && result.toneTags.length > 0 && (
-              <div className="flex flex-wrap justify-end gap-1.5">
-                {result.toneTags.slice(0, 2).map((t) => (
-                  <Badge key={t} variant="brand">{t}</Badge>
-                ))}
-              </div>
+            {selected.messages.length > 0 && !loading && (
+              <Button variant="brand" size="sm" onClick={editSelectedReview}>
+                <PencilLine size={14} />
+                Edit review
+              </Button>
             )}
           </div>
 
-          <div className="panel-scroll">
+          <div
+            className="panel-scroll"
+            onScroll={(e) => {
+              const t = e.currentTarget;
+              const isBottom = Math.abs(t.scrollHeight - t.scrollTop - t.clientHeight) < 2;
+              t.classList.toggle('is-bottom', isBottom);
+            }}
+          >
             {!result && !loading && (
               <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-16 text-center">
                 <Sparkles size={26} className="text-muted-foreground" />
@@ -296,6 +341,7 @@ export default function AiReviewsPage() {
           botAvatarColor={botAvatarColor}
           botAvatarImage={botAvatarImage}
           showProfileIntro
+          blurNames={blurNames}
           downloadName={selected.customerName || 'review'}
           hideCta
           hostRef={previewHostRef}
@@ -310,7 +356,14 @@ export default function AiReviewsPage() {
             </div>
           </div>
 
-          <div className="panel-scroll">
+          <div
+            className="panel-scroll"
+            onScroll={(e) => {
+              const t = e.currentTarget;
+              const isBottom = Math.abs(t.scrollHeight - t.scrollTop - t.clientHeight) < 2;
+              t.classList.toggle('is-bottom', isBottom);
+            }}
+          >
             <div className="flex flex-col gap-4">
               <Card>
                 <CardHeader>
@@ -369,6 +422,37 @@ export default function AiReviewsPage() {
                     <Label htmlFor="ai-count">Number of reviews</Label>
                     <Input id="ai-count" type="number" min={1} max={25} value={count} onChange={(e) => setCount(Math.max(1, Math.min(25, Number(e.target.value) || 1)))} />
                   </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="ai-min-messages">Min messages</Label>
+                      <Input
+                        id="ai-min-messages"
+                        type="number"
+                        min={15}
+                        max={60}
+                        value={minMessages}
+                        onChange={(e) => setMinMessageCount(Number(e.target.value))}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="ai-max-messages">Max messages</Label>
+                      <Input
+                        id="ai-max-messages"
+                        type="number"
+                        min={minMessages}
+                        max={60}
+                        value={maxMessages}
+                        onChange={(e) => setMaxMessageCount(Number(e.target.value))}
+                      />
+                    </div>
+                  </div>
+                  <label htmlFor="ai-blur-names" className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-border bg-muted/20 px-3 py-2.5">
+                    <span className="flex flex-col gap-0.5">
+                      <span className="text-[13px] font-medium text-foreground">Blur names</span>
+                      <span className="text-[11.5px] text-muted-foreground">Mosaic hide title and pinned username</span>
+                    </span>
+                    <Switch id="ai-blur-names" checked={blurNames} onCheckedChange={setBlurNames} />
+                  </label>
                   <Button variant="brand" size="lg" onClick={generate} disabled={loading}>
                     {loading ? <Loader2 className="animate-spin" /> : <Wand2 />}
                     {loading ? 'Generating…' : `Generate ${count}`}

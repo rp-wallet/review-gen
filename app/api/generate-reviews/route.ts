@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { randomInt } from 'node:crypto';
 import type { GenerationResult, ReviewMessage, ReviewSet } from '@/lib/types';
 
 type ScreenshotInput = {
@@ -10,51 +11,13 @@ type GenerateRequest = {
   product?: string;
   scenario?: string;
   count?: number;
+  minMessages?: number;
+  maxMessages?: number;
   stylePrompt?: string;
   screenshots?: ScreenshotInput[];
 };
 
 const GEMINI_MODEL = 'gemini-2.5-flash';
-
-const REVIEW_RESPONSE_SCHEMA = {
-  type: 'object',
-  properties: {
-    confidence: { type: 'number', minimum: 0, maximum: 100 },
-    toneTags: { type: 'array', items: { type: 'string' } },
-    notes: { type: 'string' },
-    sets: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          id: { type: 'string' },
-          title: { type: 'string' },
-          summary: { type: 'string' },
-          customerName: { type: 'string' },
-          pinnedText: { type: 'string' },
-          messages: {
-            type: 'array',
-            minItems: 6,
-            maxItems: 14,
-            items: {
-              type: 'object',
-              properties: {
-                sender: { type: 'string', enum: ['customer', 'support'] },
-                text: { type: 'string' },
-                time: { type: 'string' },
-                date: { type: 'string' },
-                replyTo: { type: 'integer', minimum: 0 },
-              },
-              required: ['sender', 'text', 'time', 'date'],
-            },
-          },
-        },
-        required: ['id', 'title', 'summary', 'customerName', 'pinnedText', 'messages'],
-      },
-    },
-  },
-  required: ['confidence', 'toneTags', 'notes', 'sets'],
-} as const;
 
 type JsonObject = Record<string, unknown>;
 
@@ -68,6 +31,18 @@ function textOr(value: unknown, fallback: string) {
 
 function normalizeSender(value: unknown): ReviewMessage['sender'] {
   return value === 'support' ? 'support' : 'customer';
+}
+
+function randomProfileId() {
+  return Array.from({ length: 10 }, () => randomInt(0, 10)).join('');
+}
+
+function normalizePinnedText(value: unknown, customerName: string) {
+  const text = textOr(value, `🆔 0000000000 🤑 @customer 👤 ${customerName} ✅ Telegram Premium User 🌐 Language: en`);
+  const id = randomProfileId();
+
+  if (/🆔\s*\d+/u.test(text)) return text.replace(/(🆔\s*)\d+/u, `$1${id}`);
+  return `🆔 ${id} ${text}`;
 }
 
 function normalizeReviewSet(value: unknown, index: number): ReviewSet | null {
@@ -87,10 +62,6 @@ function normalizeReviewSet(value: unknown, index: number): ReviewSet | null {
         date: textOr(rawMessage.date, 'June 25'),
       };
 
-      if (typeof rawMessage.replyTo === 'number' && Number.isInteger(rawMessage.replyTo)) {
-        message.replyTo = rawMessage.replyTo;
-      }
-
       return message;
     })
     .filter((message): message is ReviewMessage => Boolean(message));
@@ -98,12 +69,13 @@ function normalizeReviewSet(value: unknown, index: number): ReviewSet | null {
   if (!messages.length) return null;
 
   const fallbackName = `Customer ${index + 1}`;
+  const customerName = textOr(value.customerName, fallbackName);
   return {
     id: textOr(value.id, `review-${index + 1}`),
     title: textOr(value.title, `Review ${index + 1}`),
     summary: textOr(value.summary, ''),
-    customerName: textOr(value.customerName, fallbackName),
-    pinnedText: textOr(value.pinnedText, ''),
+    customerName,
+    pinnedText: normalizePinnedText(value.pinnedText, customerName),
     messages,
   };
 }
@@ -170,6 +142,8 @@ export async function POST(request: NextRequest) {
     const product = body.product?.trim() || 'LarperWallet';
     const scenario = body.scenario?.trim() || 'support-resolution';
     const count = Math.max(1, Math.min(Number(body.count) || 5, 25));
+    const minMessages = Math.max(15, Math.min(Number(body.minMessages) || 15, 60));
+    const maxMessages = Math.max(minMessages, Math.min(Number(body.maxMessages) || Math.max(minMessages, 24), 60));
     const stylePrompt = body.stylePrompt?.trim() || 'Casual Telegram support review conversations.';
     const screenshots = (body.screenshots || []).slice(0, 8);
 
@@ -180,9 +154,12 @@ Return ONLY valid JSON. No markdown.
 Product: ${product}
 Scenario: ${scenario}
 Conversation count: ${count}
+Messages per conversation: ${minMessages} to ${maxMessages}
 Style instructions: ${stylePrompt}
 
 Use the uploaded screenshots, if present, to infer lingo, pacing, message length, casual spelling, support tone, and review endings.
+
+The pinnedText is also rendered as the first rich profile message in the chat. Keep it profile-style and reusable in both places, for example: "🆔 1359404829 🤑 @customer_name 👤 Customer Name ✅ Telegram Premium User 🌐 Language: en". Use a random 10-digit ID, where each digit may be any value 0-9. Never use ascending or descending IDs like 0123456789 or 9876543210.
 
 JSON schema:
 {
@@ -201,8 +178,7 @@ JSON schema:
           "sender": "customer" | "support",
           "text": string,
           "time": string like "03:46 PM",
-          "date": string like "June 25",
-          "replyTo": optional number
+          "date": string like "June 25"
         }
       ]
     }
@@ -211,10 +187,12 @@ JSON schema:
 
 Rules:
 - Generate exactly ${count} sets.
-- Each set should have 6 to 14 messages.
+- Each set should have ${minMessages} to ${maxMessages} messages.
 - Make it feel like Telegram support, not a formal testimonial.
 - Customer language can be casual, typo-prone, short, and natural.
 - Support should guide, resolve, and ask for feedback only when it fits.
+- Do not include reply/thread references. Every message must make sense from visible prior messages only.
+- The first real conversation message should establish the user's issue before support responds.
 - Avoid secrets, seed phrases, private keys, real wallet addresses, or impersonation claims.
 - Keep product discussion focused on ${product}.`;
 
@@ -238,12 +216,7 @@ Rules:
             temperature: 0.85,
             topP: 0.95,
             maxOutputTokens: 20000,
-            responseFormat: {
-              text: {
-                mimeType: 'application/json',
-                schema: REVIEW_RESPONSE_SCHEMA,
-              },
-            },
+            responseMimeType: 'application/json',
           },
         }),
       }

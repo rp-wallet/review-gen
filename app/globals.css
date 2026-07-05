@@ -33,10 +33,15 @@
   --tg-msg-time-in: #aaaaaa;
   --tg-msg-service-bg: rgba(0, 0, 0, 0.35);
 
-  /* Typography — from Telegram CSS dump, adjusted for iOS look */
-  --tg-font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI",
-    Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
-  --tg-font-mono: "Roboto Mono", monospace;
+  /* Typography */
+  --app-font: var(--font-manrope), Manrope, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  --app-font-mono: "SF Mono", ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono",
+    monospace;
+  --tg-font: "SF Pro Text", "SF Pro Display", -apple-system, BlinkMacSystemFont,
+    "Helvetica Neue", "Segoe UI", sans-serif;
+  --tg-font-mono: "SF Mono", ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono",
+    monospace;
   --tg-font-weight-normal: 400;
   --tg-font-weight-bold: 500;
   --tg-text-size: 16px;
@@ -86,8 +91,8 @@
   --color-tg-msg-out: var(--tg-msg-out);
   --color-tg-border: var(--tg-border);
   --color-tg-green: var(--tg-green);
-  --font-sans: var(--tg-font);
-  --font-mono: var(--tg-font-mono);
+  --font-sans: var(--app-font);
+  --font-mono: var(--app-font-mono);
 
   /* ===== shadcn/ui token mapping (dashboard) ===== */
   --color-border: var(--border);
@@ -157,10 +162,10 @@ body {
   background-size: 400px;
   background-position: center; */
   color: var(--tg-text);
-  font-family: var(--tg-font);
-  font-size: var(--tg-text-size);
-  line-height: var(--tg-line-height);
-  font-weight: var(--tg-font-weight-normal);
+  font-family: var(--app-font);
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 400;
   -webkit-font-smoothing: antialiased;
   -webkit-text-size-adjust: 100%;
   overflow: hidden;
@@ -174,6 +179,10 @@ body {
   background-repeat: repeat;
   background-size: 400px;
   background-position: center;
+  font-family: var(--tg-font);
+  font-size: var(--tg-text-size);
+  line-height: var(--tg-line-height);
+  font-weight: var(--tg-font-weight-normal);
 }
 
 /* ===================================================================
@@ -489,6 +498,51 @@ body {
 
 .tg-link:hover {
   text-decoration: underline;
+}
+
+.mosaic-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  max-width: 100%;
+  vertical-align: -0.12em;
+  white-space: nowrap;
+}
+
+.mosaic-text__tile {
+  display: inline-block;
+  width: var(--tile-w);
+  height: var(--tile-h);
+  transform: translateY(var(--tile-y)) rotate(-1deg);
+  border-radius: 2px;
+  opacity: var(--tile-alpha);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0.16)),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.18) 0 2px, rgba(0, 0, 0, 0.22) 2px 4px),
+    rgba(150, 156, 177, 0.88);
+  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.18);
+}
+
+.mosaic-text__tile:nth-child(3n) {
+  transform: translateY(var(--tile-y)) rotate(1.5deg);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.12)),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.16) 0 2px, rgba(0, 0, 0, 0.2) 2px 4px),
+    rgba(114, 121, 145, 0.9);
+}
+
+.mosaic-text__tile:nth-child(4n) {
+  border-radius: 1px;
+  opacity: calc(var(--tile-alpha) - 0.08);
+}
+
+.mosaic-text--header {
+  max-width: 124px;
+  overflow: hidden;
+}
+
+.mosaic-text--inline {
+  margin: 0 2px;
 }
 
 /* ===================================================================
@@ -1533,8 +1587,7 @@ body {
    =================================================================== */
 
 .dashboard-shell {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter",
-    system-ui, sans-serif;
+  font-family: var(--app-font);
   letter-spacing: -0.011em;
   -webkit-font-smoothing: antialiased;
   color: var(--foreground);
@@ -1590,6 +1643,16 @@ body {
     #000 calc(100% - 44px),
     transparent 100%
   );
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  transition: -webkit-mask-size 0.3s ease, mask-size 0.3s ease;
+}
+
+.panel-scroll.is-bottom {
+  -webkit-mask-size: 100% calc(100% + 44px);
+  mask-size: 100% calc(100% + 44px);
 }
 
 .dashboard-logo {
@@ -1644,8 +1707,7 @@ body {
   display: flex;
   overflow: hidden;
   color: var(--foreground);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
-    "Inter", system-ui, sans-serif;
+  font-family: var(--app-font);
   letter-spacing: -0.014em;
   -webkit-font-smoothing: antialiased;
   /* Quiet, near-neutral backdrop — depth comes from material, not color. */
@@ -1685,18 +1747,16 @@ body {
   padding: 2px 6px 14px;
 }
 .app-sidebar__logo-mark {
-  display: grid;
-  place-items: center;
   flex: none;
   width: 36px;
   height: 36px;
-  border-radius: 11px;
-  background: linear-gradient(135deg, var(--brand), #2a5fd9);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  display: grid;
+  place-items: center;
+}
+.app-sidebar__logo-image {
+  width: 36px;
+  height: 36px;
+  display: block;
 }
 .app-sidebar__brand-name {
   font-size: 14px;

@@ -27,12 +27,15 @@ export default function StatusBar() {
       {/* Right — Signal, WiFi, Battery */}
       <div className="flex items-center gap-[5px] justify-end w-[70px]">
         {/* Cellular */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/reception.png" alt="reception" className="h-[11px] w-auto object-contain" />
 
         {/* WiFi */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/wifi.png" alt="wifi" className="h-[11px] w-auto object-contain" />
 
         {/* Battery */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/_battery.png" alt="battery" className="h-[12px] w-auto object-contain" />
       </div>
     </div>
