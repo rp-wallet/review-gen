@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -10,8 +11,10 @@ import {
   UserRound,
   Settings,
   Coins,
+  LogOut,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { signOut, useSession } from '@/lib/auth-client';
 
 const TOOLS = [
   { href: '/chat-builder', icon: MessageSquare, label: 'Chat Builder' },
@@ -24,8 +27,38 @@ const SOON = [
   { icon: UserRound, label: 'Profiles' },
 ];
 
+type MePayload = {
+  isPro: boolean;
+  credits: number;
+};
+
 export default function AppRail() {
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const [me, setMe] = useState<MePayload>({ isPro: false, credits: 0 });
+  const user = session?.user;
+  const displayName = user?.name || user?.email || 'Guest';
+  const initial = displayName.slice(0, 1).toUpperCase();
+
+  useEffect(() => {
+    let active = true;
+    fetch('/api/me')
+      .then((response) => response.json())
+      .then((payload) => {
+        if (!active) return;
+        setMe({
+          isPro: Boolean(payload?.isPro),
+          credits: Number(payload?.credits ?? 0),
+        });
+      })
+      .catch(() => {
+        if (active) setMe({ isPro: false, credits: 0 });
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [user?.id]);
 
   return (
     <nav className="app-sidebar" aria-label="Tools">
@@ -42,13 +75,10 @@ export default function AppRail() {
         </span>
         <span className="min-w-0">
           <span className="app-sidebar__brand-name block truncate">ReviewMockup</span>
-          <span className="app-sidebar__brand-sub block truncate">
-            Chat reviews in seconds
-          </span>
         </span>
       </Link>
 
-      <div className="app-sidebar__group">
+      <div className="app-sidebar__group mt-6">
         {TOOLS.map(({ href, icon: Icon, label }) => {
           const active = pathname.startsWith(href);
           return (
@@ -83,14 +113,31 @@ export default function AppRail() {
           Settings
         </span>
         <div className="app-sidebar__account" title="Account">
-          <span className="app-sidebar__avatar">N</span>
+          <span className="app-sidebar__avatar">
+            {user?.image ? (
+              <Image src={user.image} alt="" width={32} height={32} />
+            ) : (
+              initial
+            )}
+          </span>
           <span className="min-w-0">
-            <span className="app-sidebar__account-name block truncate">ReviewMockup</span>
+            <span className="app-sidebar__account-name block truncate">{displayName}</span>
             <span className="app-sidebar__account-sub">
               <Coins size={11} />
-              ∞ credits · Pro
+              {user ? `${me.credits} credits · ${me.isPro ? 'Pro' : 'Free'}` : 'Sign in to export'}
             </span>
           </span>
+          {user && (
+            <button
+              type="button"
+              className="app-sidebar__signout"
+              aria-label="Sign out"
+              title="Sign out"
+              onClick={() => signOut()}
+            >
+              <LogOut size={14} />
+            </button>
+          )}
         </div>
       </div>
     </nav>

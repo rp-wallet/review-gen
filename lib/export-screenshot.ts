@@ -66,7 +66,11 @@ function createExportClone(node: HTMLElement, width: number, height: number) {
 }
 
 /** Renders the given .chat-bg node server-side and downloads it as a PNG. */
-export async function exportChatScreenshot(node: HTMLElement, downloadName: string) {
+export async function exportChatScreenshot(
+  node: HTMLElement,
+  downloadName: string,
+  options: { app?: 'telegram' | 'instagram' | 'twitter'; device?: string } = {}
+) {
   const { width, height } = getScreenSize(node);
   const exportHost = document.createElement('div');
   const exportNode = createExportClone(node, width, height);
@@ -108,11 +112,20 @@ export async function exportChatScreenshot(node: HTMLElement, downloadName: stri
         width,
         height,
         scrollBottomOffset,
+        app: options.app ?? 'telegram',
+        device: options.device,
       })
     });
 
     if (!response.ok) {
-      throw new Error('Export failed on server');
+      let message = 'Export failed on server';
+      try {
+        const payload = await response.json();
+        if (typeof payload?.error === 'string') message = payload.error;
+      } catch {
+        // Keep the generic failure if the server did not return JSON.
+      }
+      throw new Error(message);
     }
 
     const blob = await response.blob();

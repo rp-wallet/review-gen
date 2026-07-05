@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { randomInt } from 'node:crypto';
+import { db } from '@/db';
+import { creditLedger } from '@/db/schema';
+import { getEntitlement, requireCurrentSession } from '@/lib/session';
 import type { GenerationResult, ReviewMessage, ReviewSet } from '@/lib/types';
 
 type ScreenshotInput = {
@@ -150,6 +153,11 @@ function cleanJson(text: string) {
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await requireCurrentSession();
+    if (!session) {
+      return NextResponse.json({ error: 'auth_required' }, { status: 401 });
+    }
+
     let body: GenerateRequest;
     try {
       body = (await request.json()) as GenerateRequest;
@@ -173,6 +181,15 @@ export async function POST(request: NextRequest) {
     const maxMessages = Math.max(minMessages, Math.min(Number(body.maxMessages) || Math.max(minMessages, 24), 60));
     const stylePrompt = body.stylePrompt?.trim() || 'Casual Telegram support review conversations.';
     const screenshots = (body.screenshots || []).slice(0, 8);
+    const entitlement = await getEntitlement(session.user.id);
+
+    if (!entitlement.isPro) {
+      return NextResponse.json({ error: 'upgrade_required' }, { status: 402 });
+    }
+
+    if (entitlement.credits < count) {
+      return NextResponse.json({ error: 'no_credits' }, { status: 402 });
+    }
 
     const prompt = `You generate realistic Telegram-style review/support conversations for an internal review generator.
 
@@ -270,7 +287,20 @@ Rules:
       return NextResponse.json({ error: 'Gemini returned invalid JSON.' }, { status: 502 });
     }
 
-    return NextResponse.json(normalizeResult(parsed, count));
+    const result = normalizeResult(parsed, count);
+
+    await db.insert(creditLedger).values({
+      userId: session.user.id,
+      delta: -result.sets.length,
+      reason: 'generation',
+      meta: {
+        count: result.sets.length,
+        model: GEMINI_MODEL,
+        product,
+      },
+    });
+
+    return NextResponse.json(result);
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Unknown generation error.' },

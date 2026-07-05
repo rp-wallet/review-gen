@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Sparkles,
@@ -20,7 +20,9 @@ import { ReviewSet, GenerationResult } from '@/lib/types';
 import { DeviceId, DEFAULT_DEVICE_ID } from '@/lib/devices';
 import PhonePreview from '@/components/PhonePreview';
 import WorkspaceHeader from '@/components/WorkspaceHeader';
+import AuthModal, { AuthModalVariant } from '@/components/AuthModal';
 import { exportChatScreenshot } from '@/lib/export-screenshot';
+import { useSession } from '@/lib/auth-client';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -53,6 +55,13 @@ const EMPTY_REVIEW: ReviewSet = {
   pinnedText: '',
   messages: [],
 };
+const PENDING_ACTION_KEY = 'reviewmockup:pending-action';
+
+type MePayload = {
+  isPro: boolean;
+  credits: number;
+  plan: 'free' | 'pro';
+};
 
 const CURRENT_YEAR = new Date().getFullYear();
 
@@ -84,6 +93,7 @@ function formatISOToLabel(iso: string): string {
 
 export default function AiReviewsPage() {
   const router = useRouter();
+  const { data: session } = useSession();
 
   // Bot identity (preview only — not sent to the model)
   const [botName, setBotName] = useState('LarperWallet_bot');
@@ -108,6 +118,8 @@ export default function AiReviewsPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const [exporting, setExporting] = useState(false);
+  const [authModal, setAuthModal] = useState<AuthModalVariant | null>(null);
+  const [me, setMe] = useState<MePayload>({ isPro: false, credits: 0, plan: 'free' });
   const previewHostRef = useRef<HTMLDivElement | null>(null);
 
   const selected = useMemo(
@@ -199,7 +211,25 @@ export default function AiReviewsPage() {
     router.push('/chat-builder');
   };
 
-  const generate = async () => {
+  const refreshMe = useCallback(async () => {
+    const response = await fetch('/api/me');
+    if (!response.ok) return;
+    const payload = await response.json();
+    setMe({
+      isPro: Boolean(payload?.isPro),
+      credits: Number(payload?.credits ?? 0),
+      plan: payload?.isPro ? 'pro' : 'free',
+    });
+  }, []);
+
+  useEffect(() => {
+    const refresh = window.setTimeout(() => {
+      refreshMe();
+    }, 0);
+    return () => window.clearTimeout(refresh);
+  }, [refreshMe, session?.user]);
+
+  const runGenerate = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
@@ -217,6 +247,18 @@ export default function AiReviewsPage() {
       });
       const payload = await res.json();
       if (!res.ok) {
+        if (payload?.error === 'auth_required') {
+          window.sessionStorage.setItem(PENDING_ACTION_KEY, 'ai-reviews:generate');
+          setAuthModal('upgrade');
+          return;
+        }
+        if (payload?.error === 'upgrade_required') {
+          setAuthModal('upgrade');
+          return;
+        }
+        if (payload?.error === 'no_credits') {
+          throw new Error('You are out of AI review credits.');
+        }
         const detail = typeof payload?.detail === 'string' && payload.detail.trim() ? ` ${payload.detail}` : '';
         throw new Error(`${payload?.error || 'Generation failed.'}${detail}`);
       }
@@ -230,24 +272,107 @@ export default function AiReviewsPage() {
       setSelectedId(null);
     } finally {
       setLoading(false);
+      refreshMe();
     }
-  };
+  }, [count, examples, maxMessages, minMessages, productDesc, productName, refreshMe]);
 
-  const handleExport = async () => {
+  const runExport = useCallback(async () => {
     const node = previewHostRef.current?.querySelector<HTMLElement>('.chat-bg');
     if (!node) return;
     setExporting(true);
     try {
-      await exportChatScreenshot(node, selected.customerName || 'review');
+      await exportChatScreenshot(node, selected.customerName || 'review', {
+        app: 'telegram',
+        device,
+      });
     } catch (err) {
+      if (err instanceof Error && err.message === 'auth_required') {
+        window.sessionStorage.setItem(PENDING_ACTION_KEY, 'ai-reviews:export');
+        setAuthModal('export');
+        return;
+      }
       console.error('Unable to export screenshot', err);
     } finally {
       setExporting(false);
+    }
+  }, [device, selected.customerName]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has('upgraded')) return;
+    window.sessionStorage.setItem(PENDING_ACTION_KEY, 'ai-reviews:generate');
+    const refresh = window.setTimeout(() => {
+      refreshMe();
+    }, 0);
+    router.replace('/ai-reviews');
+    return () => window.clearTimeout(refresh);
+  }, [refreshMe, router]);
+
+  useEffect(() => {
+    if (!session?.user) return;
+    const pendingAction = window.sessionStorage.getItem(PENDING_ACTION_KEY);
+    if (pendingAction === 'ai-reviews:export') {
+      window.sessionStorage.removeItem(PENDING_ACTION_KEY);
+      const resume = window.setTimeout(() => {
+        setAuthModal(null);
+        runExport();
+      }, 0);
+      return () => window.clearTimeout(resume);
+    }
+    if (pendingAction === 'ai-reviews:generate' && me.isPro) {
+      window.sessionStorage.removeItem(PENDING_ACTION_KEY);
+      const resume = window.setTimeout(() => {
+        setAuthModal(null);
+        runGenerate();
+      }, 0);
+      return () => window.clearTimeout(resume);
+    }
+  }, [me.isPro, runExport, runGenerate, session?.user]);
+
+  // Exporting needs an account; generating is a Pro feature.
+  const handleExport = () => {
+    if (!session?.user) {
+      window.sessionStorage.setItem(PENDING_ACTION_KEY, 'ai-reviews:export');
+      setAuthModal('export');
+      return;
+    }
+    runExport();
+  };
+
+  const generate = () => {
+    if (!session?.user) {
+      window.sessionStorage.setItem(PENDING_ACTION_KEY, 'ai-reviews:generate');
+      setAuthModal('upgrade');
+      return;
+    }
+    if (!me.isPro) {
+      setAuthModal('upgrade');
+      return;
+    }
+    runGenerate();
+  };
+
+  const handleAuthComplete = async () => {
+    const variant = authModal;
+    if (variant === 'upgrade') {
+      await refreshMe();
+      return;
+    } else {
+      window.sessionStorage.removeItem(PENDING_ACTION_KEY);
+      setAuthModal(null);
+      runExport();
     }
   };
 
   return (
     <div className="workspace">
+      <AuthModal
+        open={authModal !== null}
+        variant={authModal ?? 'export'}
+        onClose={() => setAuthModal(null)}
+        onComplete={handleAuthComplete}
+      />
       <WorkspaceHeader
         title="AI Reviews"
         subtitle="Generate unique conversations"

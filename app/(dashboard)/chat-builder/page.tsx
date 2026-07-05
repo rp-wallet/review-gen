@@ -1,11 +1,13 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ReviewSet, ReviewMessage } from '@/lib/types';
 import { DeviceId, DEFAULT_DEVICE_ID, getDevice } from '@/lib/devices';
 import PhonePreview from '@/components/PhonePreview';
 import WorkspaceHeader from '@/components/WorkspaceHeader';
+import AuthModal from '@/components/AuthModal';
 import { exportChatScreenshot } from '@/lib/export-screenshot';
+import { useSession } from '@/lib/auth-client';
 import { cn } from '@/lib/utils';
 import {
   Bot,
@@ -44,6 +46,7 @@ import {
 } from '@/components/ui/select';
 
 const BUILDER_IMPORT_KEY = 'reviewmockup:builder-import';
+const PENDING_ACTION_KEY = 'reviewmockup:pending-action';
 
 type BuilderImport = {
   review?: ReviewSet;
@@ -65,6 +68,7 @@ function cleanMessages(messages: ReviewMessage[]) {
 }
 
 export default function ChatBuilderPage() {
+  const { data: session } = useSession();
   const [customerName, setCustomerName] = useState('Marketing Pro');
   const [avatarInitial, setAvatarInitial] = useState('M');
   const [avatarColor, setAvatarColor] = useState('#3478F6');
@@ -110,6 +114,7 @@ export default function ChatBuilderPage() {
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
   const previewHostRef = useRef<HTMLDivElement | null>(null);
 
   const selected = selectedIdx !== null ? messages[selectedIdx] : null;
@@ -212,17 +217,52 @@ export default function ChatBuilderPage() {
     setDragIdx(index);
   };
 
-  const handleExport = async () => {
+  const runExport = useCallback(async () => {
     const node = previewHostRef.current?.querySelector<HTMLElement>('.chat-bg');
     if (!node) return;
     setExporting(true);
     try {
-      await exportChatScreenshot(node, customerName || 'chat');
+      await exportChatScreenshot(node, customerName || 'chat', {
+        app: 'telegram',
+        device,
+      });
     } catch (error) {
+      if (error instanceof Error && error.message === 'auth_required') {
+        window.sessionStorage.setItem(PENDING_ACTION_KEY, 'chat-builder:export');
+        setAuthOpen(true);
+        return;
+      }
       console.error('Unable to export screenshot', error);
     } finally {
       setExporting(false);
     }
+  }, [customerName, device]);
+
+  useEffect(() => {
+    if (!session?.user) return;
+    if (window.sessionStorage.getItem(PENDING_ACTION_KEY) !== 'chat-builder:export') return;
+    window.sessionStorage.removeItem(PENDING_ACTION_KEY);
+    const resume = window.setTimeout(() => {
+      setAuthOpen(false);
+      runExport();
+    }, 0);
+    return () => window.clearTimeout(resume);
+  }, [runExport, session?.user]);
+
+  // Anonymous users can build freely; exporting requires an account.
+  const handleExport = () => {
+    if (!session?.user) {
+      window.sessionStorage.setItem(PENDING_ACTION_KEY, 'chat-builder:export');
+      setAuthOpen(true);
+      return;
+    }
+    runExport();
+  };
+
+  const handleAuthComplete = () => {
+    window.sessionStorage.removeItem(PENDING_ACTION_KEY);
+    setAuthOpen(false);
+    runExport();
   };
 
   const mockReview: ReviewSet = {
@@ -237,6 +277,12 @@ export default function ChatBuilderPage() {
 
   return (
     <div className="workspace">
+      <AuthModal
+        open={authOpen}
+        variant="export"
+        onClose={() => setAuthOpen(false)}
+        onComplete={handleAuthComplete}
+      />
       <WorkspaceHeader
         title="Chat Builder"
         subtitle="Create beautiful chat screenshots in seconds"

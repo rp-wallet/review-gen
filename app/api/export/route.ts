@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { existsSync } from 'node:fs';
 import chromium from '@sparticuz/chromium';
 import puppeteer, { type LaunchOptions } from 'puppeteer-core';
+import { db } from '@/db';
+import { exportLog } from '@/db/schema';
+import { countRecentExports, getEntitlement, requireCurrentSession } from '@/lib/session';
 
 const IPHONE_16_PRO_WIDTH = 402;
 const IPHONE_16_PRO_HEIGHT = 874;
@@ -72,10 +75,25 @@ export async function POST(request: Request) {
   let browser: Awaited<ReturnType<typeof puppeteer.launch>> | undefined;
 
   try {
-    const { html, styles, width, height, scrollBottomOffset } = await request.json();
+    const session = await requireCurrentSession();
+    if (!session) {
+      return NextResponse.json({ error: 'auth_required' }, { status: 401 });
+    }
+
+    const { html, styles, width, height, scrollBottomOffset, app, device } = await request.json();
     const screenWidth = Number(width) || IPHONE_16_PRO_WIDTH;
     const screenHeight = Number(height) || IPHONE_16_PRO_HEIGHT;
     const chatScrollBottomOffset = Math.max(0, Number(scrollBottomOffset) || 0);
+    const entitlement = await getEntitlement(session.user.id);
+
+    if (!entitlement.isPro) {
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+      const recentExports = await countRecentExports(session.user.id, oneHourAgo);
+      if (recentExports >= 20) {
+        return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
+      }
+    }
+
     const styleMarkup =
       typeof styles === 'string'
         ? styles.replace(/\\r/g, '\r').replace(/\\n/g, '\n')
@@ -178,6 +196,14 @@ export async function POST(request: Request) {
         width: screenWidth,
         height: screenHeight,
       },
+    });
+
+    await db.insert(exportLog).values({
+      userId: session.user.id,
+      app: app === 'instagram' || app === 'twitter' ? app : 'telegram',
+      device: typeof device === 'string' ? device : null,
+      width: screenWidth,
+      height: screenHeight,
     });
     
     return new NextResponse(Buffer.from(screenshot), {
