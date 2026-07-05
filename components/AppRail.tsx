@@ -43,7 +43,7 @@ export default function AppRail() {
         <span className="min-w-0">
           <span className="app-sidebar__brand-name block truncate">ReviewMockup</span>
           <span className="app-sidebar__brand-sub block truncate">
-            Chat mockups in seconds
+            Chat reviews in seconds
           </span>
         </span>
       </Link>

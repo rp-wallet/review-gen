@@ -177,7 +177,7 @@ body {
   background-color: var(--tg-bg);
   background-image: url("/telegram-bg.png");
   background-repeat: repeat;
-  background-size: 400px;
+  background-size: 460px;
   background-position: center;
   font-family: var(--tg-font);
   font-size: var(--tg-text-size);
@@ -673,11 +673,9 @@ body {
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.05) 0%,
-    rgba(255, 255, 255, 0) 22%
-  );
+  background: linear-gradient(180deg,
+      rgba(255, 255, 255, 0.05) 0%,
+      rgba(255, 255, 255, 0) 22%);
 }
 
 /* Centre chat-info pill — a touch lighter than the darker bars. */
@@ -701,6 +699,7 @@ body {
 ::-webkit-scrollbar {
   display: none;
 }
+
 /* ===================================================================
    REVIEW GENERATOR DASHBOARD
    =================================================================== */
@@ -949,7 +948,7 @@ body {
   padding: 18px;
 }
 
-.dashboard-preview-wrap > .chat-bg {
+.dashboard-preview-wrap>.chat-bg {
   height: min(874px, calc(100dvh - 48px));
   width: auto;
   aspect-ratio: 402 / 874;
@@ -1084,7 +1083,7 @@ body {
     flex-direction: column;
   }
 
-  .dashboard-preview-wrap > .chat-bg {
+  .dashboard-preview-wrap>.chat-bg {
     width: min(402px, calc(100vw - 32px));
     height: auto;
     aspect-ratio: 402 / 874;
@@ -1121,7 +1120,7 @@ body {
 /* LIQUID GLASS STYLES */
 .glass-panel {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
-  box-shadow: 
+  box-shadow:
     0 8px 32px 0 rgba(0, 0, 0, 0.3),
     inset 0 1px 1px 0 rgba(255, 255, 255, 0.15),
     inset 0 0 0 1px rgba(255, 255, 255, 0.05);
@@ -1132,7 +1131,7 @@ body {
 
 .glass-card {
   background: rgba(20, 20, 25, 0.4);
-  box-shadow: 
+  box-shadow:
     inset 0 1px 1px 0 rgba(255, 255, 255, 0.1),
     inset 0 0 0 1px rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(20px);
@@ -1165,8 +1164,8 @@ body {
 .glass-input:focus {
   outline: none;
   border-color: rgba(135, 116, 225, 0.6);
-  box-shadow: 
-    inset 0 2px 4px rgba(0, 0, 0, 0.2), 
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.2),
     0 0 0 4px rgba(135, 116, 225, 0.15),
     0 1px 0 rgba(255, 255, 255, 0.05);
   background: rgba(0, 0, 0, 0.4);
@@ -1180,14 +1179,15 @@ body {
 
 .glass-btn {
   background: linear-gradient(135deg, rgba(135, 116, 225, 0.9), rgba(106, 84, 214, 0.9));
-  box-shadow: 
+  box-shadow:
     0 4px 14px 0 rgba(135, 116, 225, 0.39),
     inset 0 1px 1px rgba(255, 255, 255, 0.3);
   transition: all 0.2s ease;
 }
+
 .glass-btn:hover {
   background: linear-gradient(135deg, rgba(145, 126, 235, 1), rgba(116, 94, 224, 1));
-  box-shadow: 
+  box-shadow:
     0 6px 20px 0 rgba(135, 116, 225, 0.5),
     inset 0 1px 1px rgba(255, 255, 255, 0.4);
 }
@@ -1231,7 +1231,7 @@ body {
    identical at any browser zoom or window height. It is then scaled to fit the
    available space via --phone-scale (set from JS). A screenshot of this element
    is always a consistent 402x874. */
-.dashboard-preview-wrap > .chat-bg {
+.dashboard-preview-wrap>.chat-bg {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -1251,7 +1251,7 @@ body {
   will-change: transform, opacity;
 }
 
-.dashboard-preview-wrap.is-ready > .chat-bg {
+.dashboard-preview-wrap.is-ready>.chat-bg {
   opacity: 1;
   transform: translate(-50%, -50%) scale(var(--phone-scale, 1));
 }
@@ -1263,7 +1263,7 @@ body {
    1. Outer titanium gradient (the visible metal band)
    2. Inner black bezel (glass-to-frame transition)
    3. Subtle inner glow ring (glass edge reflection)  */
-.dashboard-preview-wrap > .phone-rim {
+.dashboard-preview-wrap>.phone-rim {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -1276,18 +1276,16 @@ body {
   /* Natural titanium — bright silver band with soft brushed-metal banding,
      like the real frame catches studio light. Kept light so it separates
      clearly from both the dark screen and the dark dashboard. */
-  background: linear-gradient(
-    145deg,
-    #d9dade 0%,
-    #aaabb1 9%,
-    #8e8f96 20%,
-    #b4b5bb 34%,
-    #85868d 48%,
-    #a7a8ae 62%,
-    #7e7f86 76%,
-    #a2a3a9 88%,
-    #74757c 100%
-  );
+  background: linear-gradient(145deg,
+      #d9dade 0%,
+      #aaabb1 9%,
+      #8e8f96 20%,
+      #b4b5bb 34%,
+      #85868d 48%,
+      #a7a8ae 62%,
+      #7e7f86 76%,
+      #a2a3a9 88%,
+      #74757c 100%);
 
   /* Machined-edge lighting: specular top rim, shaded bottom rim, faint side
      falloff, a hairline dark contour so the metal reads as a solid object,
@@ -1306,7 +1304,7 @@ body {
   will-change: transform, opacity;
 }
 
-.dashboard-preview-wrap.is-ready > .phone-rim {
+.dashboard-preview-wrap.is-ready>.phone-rim {
   opacity: 1;
   transform: translate(-50%, -50%) scale(var(--phone-scale, 1));
 }
@@ -1353,21 +1351,25 @@ body {
     inset 0 -1px 0 rgba(0, 0, 0, 0.4),
     -1px 0 2px rgba(0, 0, 0, 0.45);
 }
+
 .phone-rim__btn--mute {
   left: -4px;
   top: 122px;
   height: 30px;
 }
+
 .phone-rim__btn--vup {
   left: -4px;
   top: 186px;
   height: 62px;
 }
+
 .phone-rim__btn--vdown {
   left: -4px;
   top: 258px;
   height: 62px;
 }
+
 .phone-rim__btn--power {
   right: -4px;
   top: 218px;
@@ -1395,7 +1397,7 @@ body {
   z-index: 5;
 }
 
-.dashboard-preview-wrap.is-ready > .phone-loader {
+.dashboard-preview-wrap.is-ready>.phone-loader {
   opacity: 0;
   pointer-events: none;
 }
@@ -1416,10 +1418,11 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .dashboard-preview-wrap > .chat-bg {
+  .dashboard-preview-wrap>.chat-bg {
     transition: opacity 0.2s ease;
     transform: translate(-50%, -50%) scale(var(--phone-scale, 1));
   }
+
   .phone-loader__spinner {
     animation-duration: 1.6s;
   }
@@ -1548,7 +1551,7 @@ body {
     min-height: 0;
   }
 
-  .dashboard-preview-wrap > .chat-bg {
+  .dashboard-preview-wrap>.chat-bg {
     width: 100%;
     height: auto;
     aspect-ratio: 402 / 874;
@@ -1631,18 +1634,14 @@ body {
   min-height: 0;
   overflow-y: auto;
   padding: 16px 18px;
-  -webkit-mask-image: linear-gradient(
-    180deg,
-    #000 0,
-    #000 calc(100% - 44px),
-    transparent 100%
-  );
-  mask-image: linear-gradient(
-    180deg,
-    #000 0,
-    #000 calc(100% - 44px),
-    transparent 100%
-  );
+  -webkit-mask-image: linear-gradient(180deg,
+      #000 0,
+      #000 calc(100% - 44px),
+      transparent 100%);
+  mask-image: linear-gradient(180deg,
+      #000 0,
+      #000 calc(100% - 44px),
+      transparent 100%);
   -webkit-mask-size: 100% 100%;
   mask-size: 100% 100%;
   -webkit-mask-repeat: no-repeat;
@@ -1674,12 +1673,15 @@ body {
   cursor: pointer;
   transition: border-color 0.2s ease;
 }
+
 .dash-color:hover {
   border-color: var(--muted-foreground);
 }
+
 .dash-color::-webkit-color-swatch-wrapper {
   padding: 0;
 }
+
 .dash-color::-webkit-color-swatch {
   border: none;
   border-radius: calc(var(--radius-md) - 3px);
@@ -1689,11 +1691,13 @@ body {
 .dash-date {
   color-scheme: dark;
 }
+
 .dash-date::-webkit-calendar-picker-indicator {
   opacity: 0.55;
   cursor: pointer;
   transition: opacity 0.15s ease;
 }
+
 .dash-date::-webkit-calendar-picker-indicator:hover {
   opacity: 0.9;
 }
@@ -1746,6 +1750,7 @@ body {
   gap: 10px;
   padding: 2px 6px 14px;
 }
+
 .app-sidebar__logo-mark {
   flex: none;
   width: 36px;
@@ -1753,17 +1758,20 @@ body {
   display: grid;
   place-items: center;
 }
+
 .app-sidebar__logo-image {
   width: 36px;
   height: 36px;
   display: block;
 }
+
 .app-sidebar__brand-name {
   font-size: 14px;
   font-weight: 600;
   line-height: 1.2;
   color: var(--foreground);
 }
+
 .app-sidebar__brand-sub {
   font-size: 11px;
   color: var(--muted-foreground);
@@ -1774,6 +1782,7 @@ body {
   flex-direction: column;
   gap: 3px;
 }
+
 .app-sidebar__group--bottom {
   margin-top: auto;
 }
@@ -1790,19 +1799,23 @@ body {
   color: var(--muted-foreground);
   transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
 }
+
 .app-sidebar__item:hover {
   background: rgba(255, 255, 255, 0.08);
   color: var(--foreground);
 }
+
 .app-sidebar__item.is-active {
   background: rgba(63, 125, 251, 0.13);
   color: #fff;
   box-shadow: inset 0 0 0 1px rgba(63, 125, 251, 0.25);
 }
+
 .app-sidebar__item.is-disabled {
   opacity: 0.35;
   cursor: not-allowed;
 }
+
 .app-sidebar__item.is-disabled:hover {
   background: transparent;
   color: var(--muted-foreground);
@@ -1819,6 +1832,7 @@ body {
   background: rgba(255, 255, 255, 0.04);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
+
 .app-sidebar__avatar {
   display: grid;
   place-items: center;
@@ -1832,12 +1846,14 @@ body {
   font-size: 13px;
   font-weight: 600;
 }
+
 .app-sidebar__account-name {
   font-size: 13px;
   font-weight: 600;
   line-height: 1.2;
   color: var(--foreground);
 }
+
 .app-sidebar__account-sub {
   display: flex;
   align-items: center;
@@ -1918,6 +1934,7 @@ body {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
   cursor: not-allowed;
 }
+
 .theme-toggle__opt {
   display: inline-flex;
   align-items: center;
@@ -1929,6 +1946,7 @@ body {
   color: var(--muted-foreground);
   user-select: none;
 }
+
 .theme-toggle__opt.is-active {
   background: rgba(255, 255, 255, 0.1);
   color: var(--foreground);
@@ -1964,6 +1982,7 @@ body {
   height: 100%;
   min-height: 0;
 }
+
 .preview-dock .dashboard-preview-wrap {
   flex: 1;
   width: 100%;
@@ -1971,6 +1990,7 @@ body {
   min-height: 0;
   max-height: none;
 }
+
 .download-cta {
   width: 100%;
   flex: none;
@@ -1999,18 +2019,22 @@ body {
   transition: border-color 0.18s ease, background 0.18s ease,
     box-shadow 0.18s ease, opacity 0.18s ease;
 }
+
 .msg-row:hover {
   border-color: rgba(255, 255, 255, 0.13);
   background: rgba(255, 255, 255, 0.07);
 }
+
 .msg-row:focus-visible {
   box-shadow: 0 0 0 2px rgba(63, 125, 251, 0.4);
 }
+
 .msg-row.is-active {
   border-color: rgba(120, 162, 255, 0.45);
   background: rgba(63, 125, 251, 0.09);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
+
 .msg-row.is-dragging {
   opacity: 0.45;
 }
@@ -2023,6 +2047,7 @@ body {
   cursor: grab;
   transition: opacity 0.15s ease;
 }
+
 .msg-row:hover .msg-row__grip {
   opacity: 0.7;
 }
@@ -2048,23 +2073,27 @@ body {
   flex-direction: column;
   gap: 3px;
 }
+
 .msg-row__top {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 8px;
 }
+
 .msg-row__kind {
   font-size: 12.5px;
   font-weight: 600;
   color: var(--foreground);
 }
+
 .msg-row__time {
   flex: none;
   font-size: 11px;
   color: var(--muted-foreground);
   font-variant-numeric: tabular-nums;
 }
+
 .msg-row__text {
   margin: 0;
   font-size: 12.5px;
@@ -2075,6 +2104,7 @@ body {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
 .msg-row__text.is-empty {
   font-style: italic;
   opacity: 0.6;
@@ -2095,13 +2125,16 @@ body {
   outline: none;
   transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
 }
+
 .result-card:hover {
   border-color: rgba(255, 255, 255, 0.13);
   background: rgba(255, 255, 255, 0.07);
 }
+
 .result-card:focus-visible {
   box-shadow: 0 0 0 2px rgba(63, 125, 251, 0.4);
 }
+
 .result-card.is-active {
   border-color: rgba(120, 162, 255, 0.45);
   background: rgba(63, 125, 251, 0.09);
@@ -2127,6 +2160,7 @@ body {
   box-shadow: inset 0 1.5px 4px rgba(0, 0, 0, 0.3),
     0 1px 0 rgba(255, 255, 255, 0.05);
 }
+
 [data-slot="input"]:focus-visible,
 [data-slot="textarea"]:focus-visible {
   box-shadow: inset 0 1.5px 4px rgba(0, 0, 0, 0.3),
@@ -2156,11 +2190,13 @@ body {
   cursor: pointer;
   transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
 }
+
 .upload-zone:hover {
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(255, 255, 255, 0.22);
   color: var(--foreground);
 }
+
 .upload-zone small {
   font-size: 11px;
   font-weight: 400;

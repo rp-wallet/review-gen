@@ -100,7 +100,7 @@ export default function ChatCanvas({
       <div
         className="chat-glass chat-glass--top absolute top-0 left-0 w-full z-40 pointer-events-none"
         style={{
-          height: '160px',
+          height: '144px',
           backgroundColor: 'rgba(0,0,0, 0.55)',
           backdropFilter: 'blur(2px)',
           WebkitBackdropFilter: 'blur(2px)',
