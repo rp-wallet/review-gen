@@ -1,3 +1,4 @@
+import React from 'react';
 import { X } from 'lucide-react';
 import MarkerStrike from '@/components/MarkerStrike';
 
@@ -6,18 +7,37 @@ interface PinnedMessageProps {
   hideNames?: boolean;
 }
 
+// Strike the @username and the 👤 display name, keep every other part of the
+// pinned text visible around the marker strokes.
 function pinnedPreview(text: string, hideNames: boolean) {
   if (!hideNames) return text;
 
-  const username = text.match(/@[A-Za-z0-9_]+/)?.[0];
-  if (!username) return text;
+  const pattern = /@[A-Za-z0-9_]+|👤\s*[^🆔🤑👤✅🌐@]+/gu;
+  const nodes: React.ReactNode[] = [];
+  let cursor = 0;
+  let match: RegExpExecArray | null;
 
-  return (
-    <>
-      {text.slice(0, text.indexOf(username))}
-      <MarkerStrike text={username} className="marker-strike--inline" />
-    </>
-  );
+  while ((match = pattern.exec(text))) {
+    nodes.push(text.slice(cursor, match.index));
+    const segment = match[0];
+
+    if (segment.startsWith('@')) {
+      nodes.push(<MarkerStrike key={match.index} text={segment} className="marker-strike--inline" />);
+    } else {
+      const name = segment.replace(/^👤\s*/u, '').trimEnd();
+      nodes.push(
+        <React.Fragment key={match.index}>
+          {'👤 '}
+          <MarkerStrike text={name} className="marker-strike--inline" />
+          {segment.slice(segment.indexOf(name) + name.length)}
+        </React.Fragment>
+      );
+    }
+    cursor = match.index + segment.length;
+  }
+  nodes.push(text.slice(cursor));
+
+  return nodes.length > 1 ? <>{nodes}</> : text;
 }
 
 export default function PinnedMessage({ text, hideNames = false }: PinnedMessageProps) {

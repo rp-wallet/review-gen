@@ -17,7 +17,7 @@ export default function StatusBar({ time, cutout = 'island' }: StatusBarProps) {
   const timeString = time?.trim() || `${hours}:${minutes}`;
 
   return (
-    <div className="flex items-center justify-between w-full px-[24px] h-[54px] shrink-0 relative">
+    <div className="flex items-center justify-between w-full px-[24px] h-[50px] shrink-0 relative">
       {/* Left — Time */}
       <span className="text-white text-[15px] font-semibold tracking-tight w-[54px] flex justify-center">
         {timeString}
@@ -25,7 +25,7 @@ export default function StatusBar({ time, cutout = 'island' }: StatusBarProps) {
 
       {/* Center — Dynamic Island (hidden on notch devices) */}
       {cutout === 'island' && (
-        <div className="absolute left-1/2 -translate-x-1/2 top-[11px]">
+        <div className="absolute left-1/2 -translate-x-1/2 top-[8px]">
           <div
             className="rounded-full bg-black"
             style={{

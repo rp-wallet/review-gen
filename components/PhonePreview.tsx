@@ -100,6 +100,9 @@ export default function PhonePreview({
           <span className="phone-rim__btn phone-rim__btn--vdown" />
           <span className="phone-rim__btn phone-rim__btn--power" />
         </div>
+        {/* Notch overlay (16e) — part of the mockup frame only; sits above the
+            screen but outside .chat-bg so exports never include it. */}
+        {screen.cutout === 'notch' && <div className="phone-notch" aria-hidden="true" />}
         <StableChatCanvas
           review={review}
           botName={botName}
