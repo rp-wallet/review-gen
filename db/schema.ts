@@ -98,6 +98,9 @@ export const exportLog = pgTable('export_log', {
   device: text('device'),
   width: integer('width').notNull(),
   height: integer('height').notNull(),
+  title: text('title'),
+  /** Builder-import payload so an export can be reopened in the chat builder. */
+  meta: jsonb('meta'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 }, (table) => [index('export_log_user_idx').on(table.userId, table.createdAt)]);
 

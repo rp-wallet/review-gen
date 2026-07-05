@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { zipSync } from 'fflate';
 import {
-  Sparkles,
+  BotMessageSquare,
   Bot,
   Package,
   ImagePlus,
@@ -14,15 +15,17 @@ import {
   AlertTriangle,
   CalendarDays,
   Download,
+  FolderArchive,
   PencilLine,
 } from 'lucide-react';
 import { ReviewSet, GenerationResult } from '@/lib/types';
-import { DeviceId, DEFAULT_DEVICE_ID } from '@/lib/devices';
+import { DeviceId } from '@/lib/devices';
 import PhonePreview from '@/components/PhonePreview';
 import WorkspaceHeader from '@/components/WorkspaceHeader';
 import AuthModal, { AuthModalVariant } from '@/components/AuthModal';
-import { exportChatScreenshot } from '@/lib/export-screenshot';
+import { downloadBlob, exportChatScreenshot, renderChatScreenshot } from '@/lib/export-screenshot';
 import { useSession } from '@/lib/auth-client';
+import { useAppStore } from '@/lib/store';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -57,11 +60,10 @@ const EMPTY_REVIEW: ReviewSet = {
 };
 const PENDING_ACTION_KEY = 'reviewmockup:pending-action';
 
-type MePayload = {
-  isPro: boolean;
-  credits: number;
-  plan: 'free' | 'pro';
-};
+function zipEntryName(index: number, name: string) {
+  const safe = (name || 'review').replace(/[^\w.-]+/g, '_').slice(0, 40) || 'review';
+  return `${String(index + 1).padStart(2, '0')}-${safe}.png`;
+}
 
 const CURRENT_YEAR = new Date().getFullYear();
 
@@ -95,31 +97,35 @@ export default function AiReviewsPage() {
   const router = useRouter();
   const { data: session } = useSession();
 
-  // Bot identity (preview only — not sent to the model)
-  const [botName, setBotName] = useState('LarperWallet_bot');
-  const [botAvatarInitial, setBotAvatarInitial] = useState('L');
-  const [botAvatarColor, setBotAvatarColor] = useState('#8774e1');
-  const [botAvatarImage, setBotAvatarImage] = useState('');
+  // Generator state lives in the app store so results and inputs survive
+  // route changes (e.g. Edit review → chat builder → back).
+  const {
+    result, selectedId, productName, productDesc, count, minMessages, maxMessages,
+    hideNames, device, botName, botAvatarInitial, botAvatarColor, botAvatarImage,
+  } = useAppStore((s) => s.aiReviews);
+  const setAiReviews = useAppStore((s) => s.setAiReviews);
+  const me = useAppStore((s) => s.me);
+  const fetchMe = useAppStore((s) => s.fetchMe);
 
-  // Generation inputs
-  const [productName, setProductName] = useState('LarperWallet');
-  const [productDesc, setProductDesc] = useState('A wallet app. Casual Telegram support chats that end in a positive review.');
+  const setResult = useCallback(
+    (next: GenerationResult | null) => setAiReviews({ result: next }),
+    [setAiReviews]
+  );
+  const setSelectedId = useCallback(
+    (next: string | null) => setAiReviews({ selectedId: next }),
+    [setAiReviews]
+  );
+
+  // Example screenshots stay local — large base64 blobs, session-only input.
   const [examples, setExamples] = useState<ExampleImage[]>([]);
-  const [count, setCount] = useState(5);
-  const [minMessages, setMinMessages] = useState(15);
-  const [maxMessages, setMaxMessages] = useState(24);
-  const [hideNames, setHideNames] = useState(false);
-  const [device, setDevice] = useState<DeviceId>(DEFAULT_DEVICE_ID);
 
   // Generation state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [result, setResult] = useState<GenerationResult | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const [exporting, setExporting] = useState(false);
+  const [bulk, setBulk] = useState<{ done: number; total: number } | null>(null);
   const [authModal, setAuthModal] = useState<AuthModalVariant | null>(null);
-  const [me, setMe] = useState<MePayload>({ isPro: false, credits: 0, plan: 'free' });
   const previewHostRef = useRef<HTMLDivElement | null>(null);
 
   const selected = useMemo(
@@ -181,53 +187,50 @@ export default function AiReviewsPage() {
 
   const removeExample = (id: string) => setExamples((prev) => prev.filter((x) => x.id !== id));
 
+  const setProductName = (value: string) => setAiReviews({ productName: value });
+  const setProductDesc = (value: string) => setAiReviews({ productDesc: value });
+  const setCount = (value: number) => setAiReviews({ count: value });
+  const setHideNames = (value: boolean) => setAiReviews({ hideNames: value });
+  const setDevice = (value: DeviceId) => setAiReviews({ device: value });
+  const setBotName = (value: string) => setAiReviews({ botName: value });
+  const setBotAvatarInitial = (value: string) => setAiReviews({ botAvatarInitial: value });
+  const setBotAvatarColor = (value: string) => setAiReviews({ botAvatarColor: value });
+  const setBotAvatarImage = (value: string) => setAiReviews({ botAvatarImage: value });
+
   const setMinMessageCount = (value: number) => {
     const next = Math.max(15, Math.min(60, Number(value) || 15));
-    setMinMessages(next);
-    setMaxMessages((prev) => Math.max(next, prev));
+    setAiReviews({ minMessages: next, maxMessages: Math.max(next, maxMessages) });
   };
 
   const setMaxMessageCount = (value: number) => {
     const next = Math.max(minMessages, Math.min(60, Number(value) || minMessages));
-    setMaxMessages(next);
+    setAiReviews({ maxMessages: next });
   };
+
+  const builderImportPayload = useCallback(
+    (set: ReviewSet) => ({
+      review: set,
+      botName,
+      botAvatarInitial,
+      botAvatarColor,
+      botAvatarImage,
+      showProfileIntro: true,
+      hideNames,
+      device,
+    }),
+    [botAvatarColor, botAvatarImage, botAvatarInitial, botName, device, hideNames]
+  );
 
   const editSelectedReview = () => {
     if (!selected.messages.length) return;
-
-    window.localStorage.setItem(
-      'reviewmockup:builder-import',
-      JSON.stringify({
-        review: selected,
-        botName,
-        botAvatarInitial,
-        botAvatarColor,
-        botAvatarImage,
-        showProfileIntro: true,
-        hideNames,
-        device,
-      })
-    );
+    window.localStorage.setItem('reviewmockup:builder-import', JSON.stringify(builderImportPayload(selected)));
     router.push('/chat-builder');
   };
 
-  const refreshMe = useCallback(async () => {
-    const response = await fetch('/api/me');
-    if (!response.ok) return;
-    const payload = await response.json();
-    setMe({
-      isPro: Boolean(payload?.isPro),
-      credits: Number(payload?.credits ?? 0),
-      plan: payload?.isPro ? 'pro' : 'free',
-    });
-  }, []);
-
+  // Entitlement is cached in the store per user — no refetch on route changes.
   useEffect(() => {
-    const refresh = window.setTimeout(() => {
-      refreshMe();
-    }, 0);
-    return () => window.clearTimeout(refresh);
-  }, [refreshMe, session?.user]);
+    fetchMe(session?.user?.id ?? null);
+  }, [fetchMe, session?.user?.id]);
 
   const runGenerate = useCallback(async () => {
     setLoading(true);
@@ -272,9 +275,9 @@ export default function AiReviewsPage() {
       setSelectedId(null);
     } finally {
       setLoading(false);
-      refreshMe();
+      fetchMe(session?.user?.id ?? null, true);
     }
-  }, [count, examples, maxMessages, minMessages, productDesc, productName, refreshMe]);
+  }, [count, examples, maxMessages, minMessages, productDesc, productName, fetchMe, session?.user?.id, setResult, setSelectedId]);
 
   const runExport = useCallback(async () => {
     const node = previewHostRef.current?.querySelector<HTMLElement>('.chat-bg');
@@ -284,6 +287,8 @@ export default function AiReviewsPage() {
       await exportChatScreenshot(node, selected.customerName || 'review', {
         app: 'telegram',
         device,
+        title: selected.title || selected.customerName || 'review',
+        meta: builderImportPayload(selected),
       });
     } catch (err) {
       if (err instanceof Error && err.message === 'auth_required') {
@@ -295,28 +300,76 @@ export default function AiReviewsPage() {
     } finally {
       setExporting(false);
     }
-  }, [device, selected.customerName]);
+  }, [builderImportPayload, device, selected]);
+
+  // Renders every generated set through the same export pipeline, zips the
+  // PNGs (store-level — they are already compressed), and downloads one file.
+  const runBulkDownload = useCallback(async () => {
+    const sets = result?.sets ?? [];
+    if (!sets.length || bulk) return;
+    setBulk({ done: 0, total: sets.length });
+    const previousSelected = selectedId;
+    try {
+      const files: Record<string, Uint8Array> = {};
+      for (let i = 0; i < sets.length; i += 1) {
+        const set = sets[i];
+        setSelectedId(set.id);
+        // Let the preview re-render and its scroll anchor settle on the new set.
+        await new Promise((resolve) => setTimeout(resolve, 250));
+        const node = previewHostRef.current?.querySelector<HTMLElement>('.chat-bg');
+        if (!node) throw new Error('Preview is not ready.');
+        const blob = await renderChatScreenshot(node, {
+          app: 'telegram',
+          device,
+          title: set.title || set.customerName,
+          meta: builderImportPayload(set),
+        });
+        files[zipEntryName(i, set.customerName)] = new Uint8Array(await blob.arrayBuffer());
+        setBulk({ done: i + 1, total: sets.length });
+      }
+      const zipped = zipSync(files, { level: 0 });
+      const zipBuffer = new Uint8Array(zipped);
+      downloadBlob(new Blob([zipBuffer], { type: 'application/zip' }), `${productName || 'reviews'}-screenshots.zip`);
+    } catch (err) {
+      if (err instanceof Error && err.message === 'auth_required') {
+        window.sessionStorage.setItem(PENDING_ACTION_KEY, 'ai-reviews:bulk');
+        setAuthModal('export');
+      } else {
+        setError(err instanceof Error ? err.message : 'Bulk download failed.');
+      }
+    } finally {
+      setSelectedId(previousSelected);
+      setBulk(null);
+    }
+  }, [builderImportPayload, bulk, device, productName, result, selectedId, setSelectedId]);
+
+  const handleBulkDownload = () => {
+    if (!session?.user) {
+      window.sessionStorage.setItem(PENDING_ACTION_KEY, 'ai-reviews:bulk');
+      setAuthModal('export');
+      return;
+    }
+    runBulkDownload();
+  };
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
     if (!params.has('upgraded')) return;
     window.sessionStorage.setItem(PENDING_ACTION_KEY, 'ai-reviews:generate');
-    const refresh = window.setTimeout(() => {
-      refreshMe();
-    }, 0);
+    fetchMe(session?.user?.id ?? null, true);
     router.replace('/ai-reviews');
-    return () => window.clearTimeout(refresh);
-  }, [refreshMe, router]);
+  }, [fetchMe, router, session?.user?.id]);
 
   useEffect(() => {
     if (!session?.user) return;
     const pendingAction = window.sessionStorage.getItem(PENDING_ACTION_KEY);
-    if (pendingAction === 'ai-reviews:export') {
+    if (pendingAction === 'ai-reviews:export' || pendingAction === 'ai-reviews:bulk') {
       window.sessionStorage.removeItem(PENDING_ACTION_KEY);
       const resume = window.setTimeout(() => {
         setAuthModal(null);
-        runExport();
+        if (pendingAction === 'ai-reviews:bulk') runBulkDownload();
+        else runExport();
       }, 0);
       return () => window.clearTimeout(resume);
     }
@@ -328,7 +381,7 @@ export default function AiReviewsPage() {
       }, 0);
       return () => window.clearTimeout(resume);
     }
-  }, [me.isPro, runExport, runGenerate, session?.user]);
+  }, [me.isPro, runBulkDownload, runExport, runGenerate, session?.user]);
 
   // Exporting needs an account; generating is a Pro feature.
   const handleExport = () => {
@@ -356,13 +409,14 @@ export default function AiReviewsPage() {
   const handleAuthComplete = async () => {
     const variant = authModal;
     if (variant === 'upgrade') {
-      await refreshMe();
+      await fetchMe(session?.user?.id ?? null, true);
       return;
-    } else {
-      window.sessionStorage.removeItem(PENDING_ACTION_KEY);
-      setAuthModal(null);
-      runExport();
     }
+    const pendingAction = window.sessionStorage.getItem(PENDING_ACTION_KEY);
+    window.sessionStorage.removeItem(PENDING_ACTION_KEY);
+    setAuthModal(null);
+    if (pendingAction === 'ai-reviews:bulk') runBulkDownload();
+    else runExport();
   };
 
   return (
@@ -380,7 +434,13 @@ export default function AiReviewsPage() {
         device={device}
         onDeviceChange={setDevice}
       >
-        <Button variant="brand" onClick={handleExport} disabled={exporting || !selected.messages.length}>
+        {(result?.sets.length ?? 0) > 1 && (
+          <Button variant="outline" onClick={handleBulkDownload} disabled={!!bulk || exporting || loading}>
+            {bulk ? <Loader2 className="animate-spin" /> : <FolderArchive />}
+            {bulk ? `Zipping ${bulk.done}/${bulk.total}…` : 'Download all (ZIP)'}
+          </Button>
+        )}
+        <Button variant="brand" onClick={handleExport} disabled={exporting || !!bulk || !selected.messages.length}>
           {exporting ? <Loader2 className="animate-spin" /> : <Download />}
           {exporting ? 'Rendering…' : 'Export screenshot'}
         </Button>
@@ -415,7 +475,7 @@ export default function AiReviewsPage() {
           >
             {!result && !loading && (
               <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-16 text-center">
-                <Sparkles size={26} className="text-muted-foreground" />
+                <BotMessageSquare size={26} className="text-muted-foreground" />
                 <div>
                   <p className="text-sm font-medium text-foreground">No reviews yet</p>
                   <p className="text-[13px] text-muted-foreground">Set up the generator on the right and hit Generate.</p>

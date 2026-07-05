@@ -13,9 +13,11 @@ export async function POST(request: NextRequest) {
 
   try {
     const origin = getAppUrl(request.url);
-    const productId = getProProductId();
+    const params = new URL(request.url).searchParams;
+    const interval = params.get('interval') === 'year' ? 'year' : 'month';
+    const productId = getProProductId(interval);
     const dodo = getDodoClient();
-    const returnUrl = `${origin}${new URL(request.url).searchParams.get('returnTo') || '/ai-reviews'}?upgraded=1`;
+    const returnUrl = `${origin}${params.get('returnTo') || '/ai-reviews'}?upgraded=1`;
 
     const checkout = await dodo.checkoutSessions.create({
       product_cart: [{ product_id: productId, quantity: 1 }],

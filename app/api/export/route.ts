@@ -5,6 +5,7 @@ import puppeteer, { type LaunchOptions } from 'puppeteer-core';
 import { db } from '@/db';
 import { exportLog } from '@/db/schema';
 import { countRecentExports, getEntitlement, requireCurrentSession } from '@/lib/session';
+import { withTestOverride } from '@/lib/test-accounts';
 
 const IPHONE_16_PRO_WIDTH = 402;
 const IPHONE_16_PRO_HEIGHT = 874;
@@ -80,11 +81,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'auth_required' }, { status: 401 });
     }
 
-    const { html, styles, width, height, scrollBottomOffset, app, device } = await request.json();
+    const { html, styles, width, height, scrollBottomOffset, app, device, title, meta } = await request.json();
     const screenWidth = Number(width) || IPHONE_16_PRO_WIDTH;
     const screenHeight = Number(height) || IPHONE_16_PRO_HEIGHT;
     const chatScrollBottomOffset = Math.max(0, Number(scrollBottomOffset) || 0);
-    const entitlement = await getEntitlement(session.user.id);
+    const entitlement = withTestOverride(await getEntitlement(session.user.id), session.user.email);
 
     if (!entitlement.isPro) {
       const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
@@ -154,6 +155,29 @@ export async function POST(request: Request) {
         </head>
         <body>
           <main id="export-root">${html}</main>
+          ${entitlement.isPro ? '' : `
+          <div style="
+            position: fixed;
+            left: 50%;
+            bottom: 108px;
+            transform: translateX(-50%);
+            z-index: 2147483647;
+            display: flex;
+            align-items: center;
+            padding: 6px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.16);
+            background: rgba(10,10,14,0.55);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            color: rgba(255,255,255,0.78);
+            font-family: -apple-system, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+            font-size: 12.5px;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            pointer-events: none;
+            white-space: nowrap;
+          ">Made with reviewmockup.com</div>`}
         </body>
       </html>
     `;
@@ -204,6 +228,8 @@ export async function POST(request: Request) {
       device: typeof device === 'string' ? device : null,
       width: screenWidth,
       height: screenHeight,
+      title: typeof title === 'string' && title.trim() ? title.trim().slice(0, 120) : null,
+      meta: meta ?? null,
     });
     
     return new NextResponse(Buffer.from(screenshot), {

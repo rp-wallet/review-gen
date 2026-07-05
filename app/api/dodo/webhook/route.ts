@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import type { WebhookPayload } from 'dodopayments/resources/webhook-events';
 import { db } from '@/db';
 import { creditLedger, subscription } from '@/db/schema';
-import { getDodoClient, getProProductId } from '@/lib/dodo';
+import { getDodoClient, getProProductIds } from '@/lib/dodo';
 
 export const runtime = 'nodejs';
 
@@ -43,8 +43,7 @@ async function upsertSubscription(event: WebhookPayload) {
   const userId = await findUserId(event);
   if (!userId) return;
 
-  const productId = getProProductId();
-  const isProProduct = event.data.product_id === productId;
+  const isProProduct = getProProductIds().includes(event.data.product_id);
   const values = {
     userId,
     plan: isProProduct ? 'pro' as const : 'free' as const,

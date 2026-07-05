@@ -1,24 +1,33 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   MessageSquare,
-  Sparkles,
+  BotMessageSquare,
   Camera,
   UserRound,
   Settings,
   Coins,
   LogOut,
+  LogIn,
+  FolderDown,
+  ChevronsUpDown,
+  CreditCard,
+  Gem,
+  Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { signOut, useSession } from '@/lib/auth-client';
+import { useAppStore } from '@/lib/store';
+import AuthModal from '@/components/AuthModal';
 
 const TOOLS = [
   { href: '/chat-builder', icon: MessageSquare, label: 'Chat Builder' },
-  { href: '/ai-reviews', icon: Sparkles, label: 'AI Reviews' },
+  { href: '/ai-reviews', icon: BotMessageSquare, label: 'AI Reviews' },
+  { href: '/exports', icon: FolderDown, label: 'Exports' },
 ];
 
 // Surfaced but disabled — signals the roadmap without being clickable yet.
@@ -27,41 +36,75 @@ const SOON = [
   { icon: UserRound, label: 'Profiles' },
 ];
 
-type MePayload = {
-  isPro: boolean;
-  credits: number;
-};
-
 export default function AppRail() {
   const pathname = usePathname();
+  const router = useRouter();
   const { data: session } = useSession();
-  const [me, setMe] = useState<MePayload>({ isPro: false, credits: 0 });
+  const me = useAppStore((s) => s.me);
+  const fetchMe = useAppStore((s) => s.fetchMe);
+  const resetMe = useAppStore((s) => s.resetMe);
+
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [portalBusy, setPortalBusy] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
   const user = session?.user;
   const displayName = user?.name || user?.email || 'Guest';
   const initial = displayName.slice(0, 1).toUpperCase();
 
+  // One fetch per signed-in user, cached in the store across route changes.
   useEffect(() => {
-    let active = true;
-    fetch('/api/me')
-      .then((response) => response.json())
-      .then((payload) => {
-        if (!active) return;
-        setMe({
-          isPro: Boolean(payload?.isPro),
-          credits: Number(payload?.credits ?? 0),
-        });
-      })
-      .catch(() => {
-        if (active) setMe({ isPro: false, credits: 0 });
-      });
+    fetchMe(user?.id ?? null);
+  }, [fetchMe, user?.id]);
 
-    return () => {
-      active = false;
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onPointerDown = (event: PointerEvent) => {
+      if (!menuRef.current?.contains(event.target as Node)) setMenuOpen(false);
     };
-  }, [user?.id]);
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMenuOpen(false);
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [menuOpen]);
+
+  const handleSignOut = async () => {
+    setMenuOpen(false);
+    await signOut();
+    resetMe();
+  };
+
+  const openBillingPortal = async () => {
+    setPortalBusy(true);
+    try {
+      const response = await fetch('/api/dodo/portal', { method: 'POST' });
+      const payload = await response.json();
+      if (response.ok && typeof payload?.url === 'string') {
+        window.location.href = payload.url;
+        return;
+      }
+    } catch {
+      // Fall through to closing the menu; nothing actionable client-side.
+    }
+    setPortalBusy(false);
+    setMenuOpen(false);
+  };
 
   return (
     <nav className="app-sidebar" aria-label="Tools">
+      <AuthModal
+        open={authOpen}
+        variant="export"
+        onClose={() => setAuthOpen(false)}
+        onComplete={() => setAuthOpen(false)}
+      />
+
       <Link href="/chat-builder" className="app-sidebar__brand" aria-label="Home">
         <span className="app-sidebar__logo-mark">
           <Image
@@ -112,33 +155,86 @@ export default function AppRail() {
           <Settings size={17} strokeWidth={2} />
           Settings
         </span>
-        <div className="app-sidebar__account" title="Account">
-          <span className="app-sidebar__avatar">
-            {user?.image ? (
-              <Image src={user.image} alt="" width={32} height={32} />
-            ) : (
-              initial
+
+        {!user ? (
+          <div className="account-guest">
+            <button type="button" className="account-guest__cta" onClick={() => setAuthOpen(true)}>
+              <LogIn size={15} />
+              Sign in
+            </button>
+            <p className="account-guest__hint">Free to start · export &amp; save your work</p>
+          </div>
+        ) : (
+          <div className="account" ref={menuRef}>
+            {menuOpen && (
+              <div className="account-menu" role="menu">
+                <div className="account-menu__row account-menu__row--static">
+                  <Coins size={14} />
+                  <span>{me.credits} AI credits</span>
+                </div>
+                <div className="account-menu__sep" />
+                {me.isPro ? (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="account-menu__row"
+                    onClick={openBillingPortal}
+                    disabled={portalBusy}
+                  >
+                    {portalBusy ? <Loader2 size={14} className="animate-spin" /> : <CreditCard size={14} />}
+                    Manage billing
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="account-menu__row account-menu__row--upgrade"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      router.push('/pricing');
+                    }}
+                  >
+                    <Gem size={14} />
+                    Upgrade to Pro
+                  </button>
+                )}
+                <Link
+                  href="/exports"
+                  role="menuitem"
+                  className="account-menu__row"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  <FolderDown size={14} />
+                  My exports
+                </Link>
+                <div className="account-menu__sep" />
+                <button type="button" role="menuitem" className="account-menu__row" onClick={handleSignOut}>
+                  <LogOut size={14} />
+                  Sign out
+                </button>
+              </div>
             )}
-          </span>
-          <span className="min-w-0">
-            <span className="app-sidebar__account-name block truncate">{displayName}</span>
-            <span className="app-sidebar__account-sub">
-              <Coins size={11} />
-              {user ? `${me.credits} credits · ${me.isPro ? 'Pro' : 'Free'}` : 'Sign in to export'}
-            </span>
-          </span>
-          {user && (
+
             <button
               type="button"
-              className="app-sidebar__signout"
-              aria-label="Sign out"
-              title="Sign out"
-              onClick={() => signOut()}
+              className="account-card"
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen((open) => !open)}
             >
-              <LogOut size={14} />
+              <span className="account-card__avatar">
+                {user.image ? <Image src={user.image} alt="" width={34} height={34} /> : initial}
+              </span>
+              <span className="min-w-0 flex-1 text-left">
+                <span className="account-card__name block truncate">{displayName}</span>
+                <span className={cn('account-card__plan', me.isPro && 'is-pro')}>
+                  {me.isPro ? 'Pro Plan' : 'Free Plan'}
+                </span>
+              </span>
+              <ChevronsUpDown size={14} className="account-card__chevron" />
             </button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </nav>
   );

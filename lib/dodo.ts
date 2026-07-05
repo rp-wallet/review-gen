@@ -17,12 +17,28 @@ export function getDodoClient() {
   });
 }
 
-export function getProProductId() {
+export type BillingInterval = 'month' | 'year';
+
+export function getProProductId(interval: BillingInterval = 'month') {
+  if (interval === 'year') {
+    const yearly = process.env.DODO_PRODUCT_PRO_YEARLY?.trim();
+    if (!yearly) {
+      throw new Error('Server is missing DODO_PRODUCT_PRO_YEARLY.');
+    }
+    return yearly;
+  }
+
   const productId = process.env.DODO_PRODUCT_PRO?.trim();
   if (!productId) {
     throw new Error('Server is missing DODO_PRODUCT_PRO.');
   }
   return productId;
+}
+
+export function getProProductIds() {
+  return [process.env.DODO_PRODUCT_PRO?.trim(), process.env.DODO_PRODUCT_PRO_YEARLY?.trim()].filter(
+    (id): id is string => Boolean(id)
+  );
 }
 
 export function getAppUrl(requestUrl?: string) {

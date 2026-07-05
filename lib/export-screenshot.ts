@@ -65,12 +65,28 @@ function createExportClone(node: HTMLElement, width: number, height: number) {
   return clone;
 }
 
-/** Renders the given .chat-bg node server-side and downloads it as a PNG. */
-export async function exportChatScreenshot(
-  node: HTMLElement,
-  downloadName: string,
-  options: { app?: 'telegram' | 'instagram' | 'twitter'; device?: string } = {}
-) {
+export type ExportOptions = {
+  app?: 'telegram' | 'instagram' | 'twitter';
+  device?: string;
+  /** Display title stored in the export history. */
+  title?: string;
+  /** Builder-import payload stored alongside the export so it can be reopened. */
+  meta?: unknown;
+};
+
+export function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.download = filename;
+  link.href = url;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+/** Renders the given .chat-bg node server-side and returns the PNG blob. */
+export async function renderChatScreenshot(node: HTMLElement, options: ExportOptions = {}) {
   const { width, height } = getScreenSize(node);
   const exportHost = document.createElement('div');
   const exportNode = createExportClone(node, width, height);
@@ -114,6 +130,8 @@ export async function exportChatScreenshot(
         scrollBottomOffset,
         app: options.app ?? 'telegram',
         device: options.device,
+        title: options.title,
+        meta: options.meta,
       })
     });
 
@@ -128,17 +146,18 @@ export async function exportChatScreenshot(
       throw new Error(message);
     }
 
-    const blob = await response.blob();
-    const url = URL.createObjectURL(blob);
-
-    const link = document.createElement('a');
-    link.download = `${downloadName}.png`;
-    link.href = url;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
+    return response.blob();
   } finally {
     exportHost.remove();
   }
+}
+
+/** Renders the given .chat-bg node server-side and downloads it as a PNG. */
+export async function exportChatScreenshot(
+  node: HTMLElement,
+  downloadName: string,
+  options: ExportOptions = {}
+) {
+  const blob = await renderChatScreenshot(node, { title: downloadName, ...options });
+  downloadBlob(blob, `${downloadName}.png`);
 }

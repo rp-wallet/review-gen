@@ -119,41 +119,37 @@ export default function ChatBuilderPage() {
 
   const selected = selectedIdx !== null ? messages[selectedIdx] : null;
 
+  // Apply synchronously: a deferred apply (setTimeout) gets cancelled by React
+  // strict-mode's double effect run after the key is already removed, which
+  // silently dropped imports and left the demo conversation in place.
   useEffect(() => {
     const raw = window.localStorage.getItem(BUILDER_IMPORT_KEY);
     if (!raw) return;
 
-    let timeout: number | undefined;
     try {
       const payload = JSON.parse(raw) as BuilderImport;
       const imported = payload.review;
       if (!imported?.messages?.length) return;
 
-      timeout = window.setTimeout(() => {
-        setCustomerName(imported.customerName || 'Customer');
-        setAvatarInitial((imported.customerName || 'C').slice(0, 1).toUpperCase());
-        setPinnedText(imported.pinnedText || '');
-        setStatusBarTime(imported.statusBarTime || '09:41');
-        setShowProfileIntro(Boolean(payload.showProfileIntro && imported.pinnedText));
-        setBotName(payload.botName || 'ReviewMockupBot');
-        setBotAvatarInitial(payload.botAvatarInitial || 'R');
-        setBotAvatarColor(payload.botAvatarColor || '#8774e1');
-        setBotAvatarImage(payload.botAvatarImage || '');
-        setHideNames(Boolean(payload.hideNames));
-        setDevice(getDevice(payload.device).id);
-        setMessages(cleanMessages(imported.messages));
-        setSelectedIdx(null);
-        setDragIdx(null);
-      }, 0);
+      setCustomerName(imported.customerName || 'Customer');
+      setAvatarInitial((imported.customerName || 'C').slice(0, 1).toUpperCase());
+      setPinnedText(imported.pinnedText || '');
+      setStatusBarTime(imported.statusBarTime || '09:41');
+      setShowProfileIntro(Boolean(payload.showProfileIntro && imported.pinnedText));
+      setBotName(payload.botName || 'ReviewMockupBot');
+      setBotAvatarInitial(payload.botAvatarInitial || 'R');
+      setBotAvatarColor(payload.botAvatarColor || '#8774e1');
+      setBotAvatarImage(payload.botAvatarImage || '');
+      setHideNames(Boolean(payload.hideNames));
+      setDevice(getDevice(payload.device).id);
+      setMessages(cleanMessages(imported.messages));
+      setSelectedIdx(null);
+      setDragIdx(null);
     } catch (error) {
       console.error('Unable to import review into chat builder', error);
     } finally {
       window.localStorage.removeItem(BUILDER_IMPORT_KEY);
     }
-
-    return () => {
-      if (timeout !== undefined) window.clearTimeout(timeout);
-    };
   }, []);
 
   const handleBotAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -225,6 +221,25 @@ export default function ChatBuilderPage() {
       await exportChatScreenshot(node, customerName || 'chat', {
         app: 'telegram',
         device,
+        title: customerName || 'Chat',
+        meta: {
+          review: {
+            id: 'export',
+            title: customerName || 'Chat',
+            summary: '',
+            customerName,
+            pinnedText,
+            statusBarTime,
+            messages,
+          },
+          botName,
+          botAvatarInitial,
+          botAvatarColor,
+          botAvatarImage,
+          showProfileIntro,
+          hideNames,
+          device,
+        },
       });
     } catch (error) {
       if (error instanceof Error && error.message === 'auth_required') {
@@ -236,7 +251,7 @@ export default function ChatBuilderPage() {
     } finally {
       setExporting(false);
     }
-  }, [customerName, device]);
+  }, [customerName, device, pinnedText, statusBarTime, messages, botName, botAvatarInitial, botAvatarColor, botAvatarImage, showProfileIntro, hideNames]);
 
   useEffect(() => {
     if (!session?.user) return;
