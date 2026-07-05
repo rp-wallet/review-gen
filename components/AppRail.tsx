@@ -19,32 +19,37 @@ const TOOLS = [
 
 // Surfaced but disabled — signals the roadmap without being clickable yet.
 const SOON = [
-  { icon: Camera, label: 'Instagram (soon)' },
-  { icon: UserRound, label: 'Profiles (soon)' },
+  { icon: Camera, label: 'Instagram' },
+  { icon: UserRound, label: 'Profiles' },
 ];
 
 export default function AppRail() {
   const pathname = usePathname();
 
   return (
-    <nav className="app-rail" aria-label="Tools">
-      <Link href="/chat-builder" className="app-rail__logo" aria-label="Home">
-        <span className="app-rail__logo-mark">RP</span>
+    <nav className="app-sidebar" aria-label="Tools">
+      <Link href="/chat-builder" className="app-sidebar__brand" aria-label="Home">
+        <span className="app-sidebar__logo-mark">RP</span>
+        <span className="min-w-0">
+          <span className="app-sidebar__brand-name block truncate">ReviewGen</span>
+          <span className="app-sidebar__brand-sub block truncate">
+            Chat mockups in seconds
+          </span>
+        </span>
       </Link>
 
-      <div className="app-rail__group">
+      <div className="app-sidebar__group">
         {TOOLS.map(({ href, icon: Icon, label }) => {
           const active = pathname.startsWith(href);
           return (
             <Link
               key={href}
               href={href}
-              title={label}
-              aria-label={label}
               aria-current={active ? 'page' : undefined}
-              className={cn('app-rail__item', active && 'is-active')}
+              className={cn('app-sidebar__item', active && 'is-active')}
             >
-              <Icon size={20} strokeWidth={2} />
+              <Icon size={17} strokeWidth={2} />
+              {label}
             </Link>
           );
         })}
@@ -52,27 +57,31 @@ export default function AppRail() {
         {SOON.map(({ icon: Icon, label }) => (
           <span
             key={label}
-            title={label}
-            aria-label={label}
+            title={`${label} (soon)`}
             aria-disabled="true"
-            className="app-rail__item is-disabled"
+            className="app-sidebar__item is-disabled"
           >
-            <Icon size={20} strokeWidth={2} />
+            <Icon size={17} strokeWidth={2} />
+            {label}
           </span>
         ))}
       </div>
 
-      <div className="app-rail__group app-rail__group--bottom">
-        <span className="app-rail__credits" title="Credits">
-          <Coins size={15} />
-          <span className="app-rail__credits-num">∞</span>
+      <div className="app-sidebar__group app-sidebar__group--bottom">
+        <span className="app-sidebar__item is-disabled" aria-disabled="true" title="Settings (soon)">
+          <Settings size={17} strokeWidth={2} />
+          Settings
         </span>
-        <span className="app-rail__item is-disabled" title="Settings (soon)" aria-label="Settings (soon)">
-          <Settings size={20} strokeWidth={2} />
-        </span>
-        <span className="app-rail__avatar" title="Account" aria-label="Account">
-          N
-        </span>
+        <div className="app-sidebar__account" title="Account">
+          <span className="app-sidebar__avatar">N</span>
+          <span className="min-w-0">
+            <span className="app-sidebar__account-name block truncate">ReviewGen</span>
+            <span className="app-sidebar__account-sub">
+              <Coins size={11} />
+              ∞ credits · Pro
+            </span>
+          </span>
+        </div>
       </div>
     </nav>
   );

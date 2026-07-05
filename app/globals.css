@@ -116,29 +116,29 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* shadcn dark palette — Vercel/Apple: near-black, hairline borders, one
-   restrained violet accent. Scoped-safe: these names are unused by the
-   Telegram phone styles. */
+/* shadcn dark palette — liquid glass: translucent white-alpha surfaces over
+   an aurora backdrop, one saturated blue accent. Scoped-safe: these names are
+   unused by the Telegram phone styles. */
 :root {
-  --radius: 0.625rem;
-  --card: #101012;
-  --card-foreground: #ededed;
-  --popover: #141416;
-  --popover-foreground: #ededed;
+  --radius: 0.875rem;
+  --card: rgba(255, 255, 255, 0.05);
+  --card-foreground: #f2f3f7;
+  --popover: #17171f;
+  --popover-foreground: #f2f3f7;
   --primary: #fafafa;
   --primary-foreground: #0a0a0a;
-  --secondary: #1c1c1f;
-  --secondary-foreground: #ededed;
-  --muted: #1a1a1d;
-  --muted-foreground: #8a8a90;
-  --accent: #1f1f23;
+  --secondary: rgba(255, 255, 255, 0.08);
+  --secondary-foreground: #f2f3f7;
+  --muted: rgba(255, 255, 255, 0.07);
+  --muted-foreground: #a0a1ad;
+  --accent: rgba(255, 255, 255, 0.09);
   --accent-foreground: #fafafa;
-  --destructive: #ff5a5a;
+  --destructive: #ff5f58;
   --destructive-foreground: #fafafa;
-  --border: #232327;
-  --input: #2a2a2e;
-  --ring: #8b7bf0;
-  --brand: #8b7bf0;
+  --border: rgba(255, 255, 255, 0.09);
+  --input: rgba(255, 255, 255, 0.13);
+  --ring: #3f7dfb;
+  --brand: #3f7dfb;
   --brand-foreground: #ffffff;
 }
 
@@ -1219,30 +1219,32 @@ body {
   border-radius: 70px;
   z-index: 1;
 
-  /* Titanium metal gradient — lighter mid-gray tones with a brighter
-     top-left highlight that simulates studio lighting on brushed metal.
-     The range is intentionally brighter so the frame is clearly visible
-     against the dark dashboard background. */
+  /* Natural titanium — bright silver band with soft brushed-metal banding,
+     like the real frame catches studio light. Kept light so it separates
+     clearly from both the dark screen and the dark dashboard. */
   background: linear-gradient(
     145deg,
-    #8a8a94 0%,
-    #6e6e78 12%,
-    #58585f 28%,
-    #6a6a72 42%,
-    #50505a 55%,
-    #5e5e68 68%,
-    #4e4e56 82%,
-    #62626c 94%,
-    #4a4a54 100%
+    #d9dade 0%,
+    #aaabb1 9%,
+    #8e8f96 20%,
+    #b4b5bb 34%,
+    #85868d 48%,
+    #a7a8ae 62%,
+    #7e7f86 76%,
+    #a2a3a9 88%,
+    #74757c 100%
   );
 
-  /* Multi-layered shadow for floating-device depth effect:
-     1. Wide ambient shadow (ground contact)
-     2. Tight diffuse glow
-     3. Top highlight (studio light reflection on top edge) */
+  /* Machined-edge lighting: specular top rim, shaded bottom rim, faint side
+     falloff, a hairline dark contour so the metal reads as a solid object,
+     and a soft ambient drop shadow to lift the device off the canvas. */
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.25),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.4);
+    inset 0 1.5px 1px rgba(255, 255, 255, 0.7),
+    inset 0 -1.5px 1px rgba(0, 0, 0, 0.45),
+    inset 1.5px 0 1px rgba(255, 255, 255, 0.28),
+    inset -1.5px 0 1px rgba(0, 0, 0, 0.28),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 30px 60px -22px rgba(0, 0, 0, 0.7);
 
   opacity: 0;
   transform: translate(-50%, -50%) scale(calc(var(--phone-scale, 1) * 0.96));
@@ -1256,23 +1258,22 @@ body {
 }
 
 /* Black bezel between rim and screen — the recessed glass effect.
-   A thicker bezel (4px titanium edge + 11px deep black) creates the
-   realistic depth of a phone screen sitting inside the frame. */
+   Real proportions: ~5px visible metal band, then ~10px of deep black
+   bezel before the screen glass starts. */
 .phone-rim::before {
   content: "";
   position: absolute;
-  inset: 3px;
-  border-radius: 67px;
-  background: #0a0a0c;
-  /* Subtle inner shadow to create the "sunken glass" illusion */
+  inset: 5px;
+  border-radius: 65px;
+  background: #060608;
+  /* Inner lip of the metal catching light, plus sunken-glass shading. */
   box-shadow:
-    inset 0 2px 6px rgba(0, 0, 0, 0.9),
-    inset 0 -1px 3px rgba(255, 255, 255, 0.05);
+    0 0 0 0.5px rgba(255, 255, 255, 0.18),
+    inset 0 2px 8px rgba(0, 0, 0, 0.9),
+    inset 0 -1px 3px rgba(255, 255, 255, 0.04);
 }
 
-/* Inner screen edge glow — a subtle bright ring right where
-   the screen glass meets the bezel, mimicking light catching the
-   chamfered edge of the display glass. */
+/* Inner screen edge — faint ring where the glass meets the bezel. */
 .phone-rim::after {
   content: "";
   position: absolute;
@@ -1282,39 +1283,47 @@ body {
   right: 15px;
   bottom: 15px;
   border-radius: 55px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   pointer-events: none;
 }
 
-/* Physical side buttons (mute / volume / power). */
+/* Physical side buttons (mute / volume / power) — same titanium finish,
+   rounded outer edge, machined highlight along the length. */
 .phone-rim__btn {
   position: absolute;
-  width: 3px;
-  border-radius: 2px;
-  background: linear-gradient(180deg, #6e6e78, #50505a, #6e6e78);
-  box-shadow: -1px 0 2px rgba(0, 0, 0, 0.5);
+  width: 4px;
+  border-radius: 3px 0 0 3px;
+  background: linear-gradient(90deg, #b9bac0, #85868d);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    -1px 0 2px rgba(0, 0, 0, 0.45);
 }
 .phone-rim__btn--mute {
-  left: -3px;
-  top: 110px;
-  height: 28px;
+  left: -4px;
+  top: 122px;
+  height: 30px;
 }
 .phone-rim__btn--vup {
-  left: -3px;
-  top: 168px;
-  height: 58px;
+  left: -4px;
+  top: 186px;
+  height: 62px;
 }
 .phone-rim__btn--vdown {
-  left: -3px;
-  top: 240px;
-  height: 58px;
+  left: -4px;
+  top: 258px;
+  height: 62px;
 }
 .phone-rim__btn--power {
-  right: -3px;
-  top: 200px;
-  height: 100px;
-  background: linear-gradient(180deg, #6e6e78, #50505a, #6e6e78);
-  box-shadow: 1px 0 2px rgba(0, 0, 0, 0.5);
+  right: -4px;
+  top: 218px;
+  height: 96px;
+  border-radius: 0 3px 3px 0;
+  background: linear-gradient(90deg, #85868d, #b9bac0);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    1px 0 2px rgba(0, 0, 0, 0.45);
 }
 
 /* ── Phone loader ────────────────────────────────────────────────────── */
@@ -1537,32 +1546,50 @@ body {
     #0a0a0a;
 }
 
-/* Column surfaces — flat, hairline border, subtle elevation. */
+/* Column surfaces — appearance comes from the shared glass rule above.
+   Fixed head + inner scroll area (see .panel-head / .panel-scroll). */
 .dashboard-sidebar,
 .dashboard-messages {
   height: min(874px, calc(100dvh - 32px));
   max-height: 874px;
   min-height: 680px;
-  overflow: auto;
-  padding: 18px;
-  border-radius: 16px;
-  border: 1px solid var(--border);
-  background: #0c0c0e;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.02) inset,
-    0 20px 50px -30px rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 20px;
 }
 
-/* Solid sticky headers that bleed to the column edges. */
-.dash-sticky-head {
-  position: sticky;
-  top: -18px;
-  margin: -18px -18px 0;
+/* Static column header. */
+.panel-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+/* Scrollable column body — content fades out at the bottom edge so the
+   cutoff reads as intentional. */
+.panel-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   padding: 16px 18px;
-  z-index: 10;
-  background: #0c0c0e;
-  border-bottom: 1px solid var(--border);
-  border-top-left-radius: 16px;
-  border-top-right-radius: 16px;
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    #000 0,
+    #000 calc(100% - 44px),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    180deg,
+    #000 0,
+    #000 calc(100% - 44px),
+    transparent 100%
+  );
 }
 
 .dashboard-logo {
@@ -1617,103 +1644,127 @@ body {
   display: flex;
   overflow: hidden;
   color: var(--foreground);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter",
-    system-ui, sans-serif;
-  letter-spacing: -0.011em;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+    "Inter", system-ui, sans-serif;
+  letter-spacing: -0.014em;
   -webkit-font-smoothing: antialiased;
-  background:
-    radial-gradient(70% 40% at 50% -10%, rgba(139, 123, 240, 0.1), transparent 60%),
-    #0a0a0a;
+  /* Quiet, near-neutral backdrop — depth comes from material, not color. */
+  background: linear-gradient(180deg, #0b0c0f 0%, #0e0f13 100%);
 }
 
-/* ── Left icon rail ─────────────────────────────────────────────── */
-.app-rail {
-  width: 64px;
+/* Shared glass surface for workspace panels — restrained: hairline border,
+   faint fill, one specular top edge, soft neutral shadow. No glow. */
+.workspace-header,
+.workspace-grid .dashboard-sidebar,
+.workspace-grid .dashboard-messages {
+  background: rgba(255, 255, 255, 0.035);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 16px 40px -28px rgba(0, 0, 0, 0.6);
+}
+
+/* ── Left labeled sidebar (flush, full-height — not a bento tile) ── */
+.app-sidebar {
+  width: 232px;
   flex: none;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 14px 0;
-  border-right: 1px solid var(--border);
-  background: rgba(10, 10, 12, 0.6);
+  gap: 3px;
+  padding: 16px 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border-right: 1px solid rgba(255, 255, 255, 0.07);
 }
 
-.app-rail__logo {
-  display: grid;
-  place-items: center;
-  margin-bottom: 6px;
+.app-sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 2px 6px 14px;
 }
-.app-rail__logo-mark {
+.app-sidebar__logo-mark {
   display: grid;
   place-items: center;
+  flex: none;
   width: 36px;
   height: 36px;
   border-radius: 11px;
-  background: linear-gradient(135deg, var(--brand), #6a54d6);
+  background: linear-gradient(135deg, var(--brand), #2a5fd9);
   color: #fff;
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.02em;
-  box-shadow: 0 4px 14px -4px rgba(139, 123, 240, 0.7),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.app-sidebar__brand-name {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--foreground);
+}
+.app-sidebar__brand-sub {
+  font-size: 11px;
+  color: var(--muted-foreground);
 }
 
-.app-rail__group {
+.app-sidebar__group {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 6px;
+  gap: 3px;
 }
-.app-rail__group--bottom {
+.app-sidebar__group--bottom {
   margin-top: auto;
 }
 
-.app-rail__item {
-  display: grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
+.app-sidebar__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 13px;
+  font-size: 13.5px;
+  font-weight: 500;
   color: var(--muted-foreground);
-  transition: background 0.18s ease, color 0.18s ease;
+  transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
 }
-.app-rail__item:hover {
-  background: var(--accent);
+.app-sidebar__item:hover {
+  background: rgba(255, 255, 255, 0.08);
   color: var(--foreground);
 }
-.app-rail__item.is-active {
-  background: rgba(139, 123, 240, 0.16);
-  color: var(--brand);
-  box-shadow: inset 0 0 0 1px rgba(139, 123, 240, 0.3);
+.app-sidebar__item.is-active {
+  background: rgba(63, 125, 251, 0.13);
+  color: #fff;
+  box-shadow: inset 0 0 0 1px rgba(63, 125, 251, 0.25);
 }
-.app-rail__item.is-disabled {
-  opacity: 0.3;
+.app-sidebar__item.is-disabled {
+  opacity: 0.35;
   cursor: not-allowed;
 }
-.app-rail__item.is-disabled:hover {
+.app-sidebar__item.is-disabled:hover {
   background: transparent;
   color: var(--muted-foreground);
 }
 
-.app-rail__credits {
+.app-sidebar__account {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 1px;
-  padding: 6px 0;
-  color: var(--muted-foreground);
+  gap: 10px;
+  margin-top: 8px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
-.app-rail__credits-num {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--foreground);
-}
-.app-rail__avatar {
+.app-sidebar__avatar {
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
+  flex: none;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background: linear-gradient(135deg, #2a2a2e, #1a1a1d);
   border: 1px solid var(--border);
@@ -1721,21 +1772,120 @@ body {
   font-size: 13px;
   font-weight: 600;
 }
+.app-sidebar__account-name {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--foreground);
+}
+.app-sidebar__account-sub {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
 
 /* ── Workspace + per-tool grid ──────────────────────────────────── */
 .app-workspace {
   flex: 1;
   min-width: 0;
   height: 100%;
-  padding: 16px;
+  padding: 14px;
   overflow: hidden;
 }
 
-.workspace-grid {
+/* Vertical stack: header bar on top, tool grid below. */
+.workspace {
   height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.workspace-header {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 18px;
+  border-radius: 16px;
+}
+
+/* Small counter chip beside the workspace title. */
+.header-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--muted-foreground);
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 18px;
+  white-space: nowrap;
+}
+
+/* Device selector trigger in the header — matches Export button height (36px),
+   liquid-glass finish to blend with the neighbouring controls. */
+.header-device {
+  height: 36px;
+  border-radius: 10px;
+  border-color: rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.055);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  font-weight: 500;
+}
+
+/* Light / Dark segmented control — same 36px height, glass shell.
+   Disabled: dark locked in, muted look. */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.055);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  cursor: not-allowed;
+}
+.theme-toggle__opt {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 13px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  user-select: none;
+}
+.theme-toggle__opt.is-active {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--foreground);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.workspace-grid {
+  flex: 1;
+  min-height: 0;
   display: grid;
   grid-template-columns: 340px minmax(0, 1fr) 452px;
   gap: 16px;
+}
+
+/* Builder variant: message list | centered phone | edit panel. */
+.workspace-grid--builder {
+  grid-template-columns: minmax(300px, 360px) minmax(0, 1fr) 340px;
 }
 
 /* Columns fill the shell height instead of the old fixed 874px cap. */
@@ -1766,6 +1916,110 @@ body {
   flex: none;
 }
 
+/* ── Builder message rows (compact, click-to-edit, drag reorder) ── */
+.msg-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.msg-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 13px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.045);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  text-align: left;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.18s ease, background 0.18s ease,
+    box-shadow 0.18s ease, opacity 0.18s ease;
+}
+.msg-row:hover {
+  border-color: rgba(255, 255, 255, 0.13);
+  background: rgba(255, 255, 255, 0.07);
+}
+.msg-row:focus-visible {
+  box-shadow: 0 0 0 2px rgba(63, 125, 251, 0.4);
+}
+.msg-row.is-active {
+  border-color: rgba(120, 162, 255, 0.45);
+  background: rgba(63, 125, 251, 0.09);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+.msg-row.is-dragging {
+  opacity: 0.45;
+}
+
+.msg-row__grip {
+  flex: none;
+  margin-top: 3px;
+  color: var(--muted-foreground);
+  opacity: 0;
+  cursor: grab;
+  transition: opacity 0.15s ease;
+}
+.msg-row:hover .msg-row__grip {
+  opacity: 0.7;
+}
+
+.msg-row__avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  margin-top: 1px;
+  border-radius: 50%;
+  overflow: hidden;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.msg-row__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.msg-row__top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.msg-row__kind {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+.msg-row__time {
+  flex: none;
+  font-size: 11px;
+  color: var(--muted-foreground);
+  font-variant-numeric: tabular-nums;
+}
+.msg-row__text {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--muted-foreground);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.msg-row__text.is-empty {
+  font-style: italic;
+  opacity: 0.6;
+}
+
 /* ── AI Reviews result cards ────────────────────────────────────── */
 .result-card {
   display: flex;
@@ -1774,21 +2028,86 @@ body {
   width: 100%;
   padding: 14px;
   border-radius: 14px;
-  border: 1px solid var(--border);
-  background: var(--card);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.045);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
   cursor: pointer;
   outline: none;
   transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
 }
 .result-card:hover {
-  border-color: rgba(255, 255, 255, 0.14);
-  background: #141416;
+  border-color: rgba(255, 255, 255, 0.13);
+  background: rgba(255, 255, 255, 0.07);
 }
 .result-card:focus-visible {
-  box-shadow: 0 0 0 2px rgba(139, 123, 240, 0.4);
+  box-shadow: 0 0 0 2px rgba(63, 125, 251, 0.4);
 }
 .result-card.is-active {
-  border-color: var(--brand);
-  box-shadow: inset 0 0 0 1px var(--brand),
-    0 10px 26px -14px rgba(139, 123, 240, 0.6);
+  border-color: rgba(120, 162, 255, 0.45);
+  background: rgba(63, 125, 251, 0.09);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* ── Liquid-glass component overrides (shadcn slots) ────────────── */
+/* Cards: quiet frosted tiles with a specular top edge. */
+[data-slot="card"] {
+  border-radius: 18px;
+  border-color: rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Fields: recessed dark glass (iOS-style inputs on frosted panels). */
+[data-slot="input"],
+[data-slot="textarea"],
+[data-slot="select-trigger"],
+.dash-color {
+  border-radius: 12px;
+  background: rgba(4, 6, 12, 0.32);
+  box-shadow: inset 0 1.5px 4px rgba(0, 0, 0, 0.3),
+    0 1px 0 rgba(255, 255, 255, 0.05);
+}
+[data-slot="input"]:focus-visible,
+[data-slot="textarea"]:focus-visible {
+  box-shadow: inset 0 1.5px 4px rgba(0, 0, 0, 0.3),
+    0 0 0 4px rgba(63, 125, 251, 0.18);
+}
+
+[data-slot="badge"] {
+  border-radius: 999px;
+}
+
+/* Dashed drop-zone style uploader (Example reviews etc.). */
+.upload-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 100%;
+  padding: 18px 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--muted-foreground);
+  font-size: 12.5px;
+  font-weight: 500;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+.upload-zone:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: var(--foreground);
+}
+.upload-zone small {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--muted-foreground);
+  opacity: 0.75;
+}
+
+.dashboard-logo {
+  border-radius: 12px;
 }
