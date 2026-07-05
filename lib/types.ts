@@ -13,6 +13,7 @@ export type ReviewSet = {
   summary: string;
   customerName: string;
   pinnedText: string;
+  statusBarTime?: string;
   messages: ReviewMessage[];
 };
 

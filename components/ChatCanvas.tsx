@@ -111,7 +111,7 @@ export default function ChatCanvas({
 
       {/* ░░ Floating Top — pills on top ░░ */}
       <div className="absolute top-0 left-0 w-full z-50 flex flex-col gap-2 px-2 pb-3">
-        <StatusBar />
+        <StatusBar time={review.statusBarTime} />
         <Header
           title={review.customerName || 'Customer'}
           subtitle={`${review.messages?.length || 0} messages`}

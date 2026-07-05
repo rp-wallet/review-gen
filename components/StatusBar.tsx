@@ -1,10 +1,14 @@
 import React from 'react';
 
-export default function StatusBar() {
+type StatusBarProps = {
+  time?: string;
+};
+
+export default function StatusBar({ time }: StatusBarProps) {
   const now = new Date();
   const hours = now.getHours();
   const minutes = now.getMinutes().toString().padStart(2, '0');
-  const timeString = `${hours}:${minutes}`;
+  const timeString = time?.trim() || `${hours}:${minutes}`;
 
   return (
     <div className="flex items-center justify-between w-full px-[24px] h-[54px] shrink-0 relative">

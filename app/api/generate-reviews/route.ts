@@ -45,6 +45,23 @@ function normalizePinnedText(value: unknown, customerName: string) {
   return `🆔 ${id} ${text}`;
 }
 
+function normalizeStatusBarTime(value: unknown) {
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  return /^([01]?\d|2[0-3]):[0-5]\d$/.test(trimmed) ? trimmed : undefined;
+}
+
+function randomStatusBarTime(used: Set<string>) {
+  for (let attempt = 0; attempt < 100; attempt += 1) {
+    const hour = randomInt(0, 24);
+    const minute = randomInt(0, 60);
+    const time = `${hour}:${String(minute).padStart(2, '0')}`;
+    if (!used.has(time)) return time;
+  }
+
+  return `${randomInt(0, 24)}:${String(randomInt(0, 60)).padStart(2, '0')}`;
+}
+
 function normalizeReviewSet(value: unknown, index: number): ReviewSet | null {
   if (!isObject(value)) return null;
 
@@ -76,6 +93,7 @@ function normalizeReviewSet(value: unknown, index: number): ReviewSet | null {
     summary: textOr(value.summary, ''),
     customerName,
     pinnedText: normalizePinnedText(value.pinnedText, customerName),
+    statusBarTime: normalizeStatusBarTime(value.statusBarTime),
     messages,
   };
 }
@@ -90,11 +108,20 @@ function normalizeResult(value: unknown, count: number): GenerationResult {
 
   if (!sets.length) throw new Error('Gemini returned no usable conversations.');
 
+  const usedStatusTimes = new Set<string>();
+  const setsWithStatusTime = sets.map((set) => {
+    const statusBarTime = set.statusBarTime && !usedStatusTimes.has(set.statusBarTime)
+      ? set.statusBarTime
+      : randomStatusBarTime(usedStatusTimes);
+    usedStatusTimes.add(statusBarTime);
+    return { ...set, statusBarTime };
+  });
+
   return {
     confidence: typeof value.confidence === 'number' ? value.confidence : undefined,
     toneTags: Array.isArray(value.toneTags) ? value.toneTags.filter((tag): tag is string => typeof tag === 'string') : [],
     notes: typeof value.notes === 'string' ? value.notes : '',
-    sets,
+    sets: setsWithStatusTime,
   };
 }
 
@@ -173,6 +200,7 @@ JSON schema:
       "summary": string,
       "customerName": string,
       "pinnedText": string,
+      "statusBarTime": string like "17:13",
       "messages": [
         {
           "sender": "customer" | "support",
@@ -188,6 +216,7 @@ JSON schema:
 Rules:
 - Generate exactly ${count} sets.
 - Each set should have ${minMessages} to ${maxMessages} messages.
+- Give every set a different random statusBarTime in 24-hour iPhone status bar format, like "9:41" or "17:13".
 - Make it feel like Telegram support, not a formal testimonial.
 - Customer language can be casual, typo-prone, short, and natural.
 - Support should guide, resolve, and ask for feedback only when it fits.

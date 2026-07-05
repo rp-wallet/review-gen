@@ -34,6 +34,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
 
 type ExampleImage = {
   id: string;
@@ -372,7 +373,8 @@ export default function AiReviewsPage() {
                     Product
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="flex flex-col gap-4 pt-0">
+                <CardContent className="flex flex-col gap-4 pt-4">
+                  <Separator />
                   <div className="flex flex-col gap-2">
                     <Label htmlFor="ai-product">Name</Label>
                     <Input id="ai-product" value={productName} onChange={(e) => setProductName(e.target.value)} placeholder="e.g. LarperWallet" />
@@ -393,7 +395,8 @@ export default function AiReviewsPage() {
                   </CardTitle>
                   <CardDescription>Screenshots the AI studies for lingo &amp; vibe</CardDescription>
                 </CardHeader>
-                <CardContent className="flex flex-col gap-4 pt-0">
+                <CardContent className="flex flex-col gap-4 pt-4">
+                  <Separator />
                   {examples.length > 0 && (
                     <div className="grid grid-cols-4 gap-2.5">
                       {examples.map((img) => (
@@ -507,7 +510,8 @@ export default function AiReviewsPage() {
                   </CardTitle>
                   <CardDescription>Used only in the preview header</CardDescription>
                 </CardHeader>
-                <CardContent className="flex flex-col gap-4 pt-0">
+                <CardContent className="flex flex-col gap-4 pt-4">
+                  <Separator />
                   <div className="flex flex-col gap-2">
                     <Label htmlFor="ai-bot-name">Name</Label>
                     <Input id="ai-bot-name" value={botName} onChange={(e) => setBotName(e.target.value)} />
