@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import type { GenerationResult, ReviewMessage, ReviewSet } from '@/lib/types';
 
 type ScreenshotInput = {
   mimeType: string;
@@ -13,7 +14,131 @@ type GenerateRequest = {
   screenshots?: ScreenshotInput[];
 };
 
-const GEMINI_MODEL = 'gemini-1.5-flash';
+const GEMINI_MODEL = 'gemini-2.5-flash';
+
+const REVIEW_RESPONSE_SCHEMA = {
+  type: 'object',
+  properties: {
+    confidence: { type: 'number', minimum: 0, maximum: 100 },
+    toneTags: { type: 'array', items: { type: 'string' } },
+    notes: { type: 'string' },
+    sets: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          title: { type: 'string' },
+          summary: { type: 'string' },
+          customerName: { type: 'string' },
+          pinnedText: { type: 'string' },
+          messages: {
+            type: 'array',
+            minItems: 6,
+            maxItems: 14,
+            items: {
+              type: 'object',
+              properties: {
+                sender: { type: 'string', enum: ['customer', 'support'] },
+                text: { type: 'string' },
+                time: { type: 'string' },
+                date: { type: 'string' },
+                replyTo: { type: 'integer', minimum: 0 },
+              },
+              required: ['sender', 'text', 'time', 'date'],
+            },
+          },
+        },
+        required: ['id', 'title', 'summary', 'customerName', 'pinnedText', 'messages'],
+      },
+    },
+  },
+  required: ['confidence', 'toneTags', 'notes', 'sets'],
+} as const;
+
+type JsonObject = Record<string, unknown>;
+
+function isObject(value: unknown): value is JsonObject {
+  return !!value && typeof value === 'object' && !Array.isArray(value);
+}
+
+function textOr(value: unknown, fallback: string) {
+  return typeof value === 'string' && value.trim() ? value.trim() : fallback;
+}
+
+function normalizeSender(value: unknown): ReviewMessage['sender'] {
+  return value === 'support' ? 'support' : 'customer';
+}
+
+function normalizeReviewSet(value: unknown, index: number): ReviewSet | null {
+  if (!isObject(value)) return null;
+
+  const rawMessages = Array.isArray(value.messages) ? value.messages : [];
+  const messages = rawMessages
+    .map((rawMessage): ReviewMessage | null => {
+      if (!isObject(rawMessage)) return null;
+      const text = textOr(rawMessage.text, '');
+      if (!text) return null;
+
+      const message: ReviewMessage = {
+        sender: normalizeSender(rawMessage.sender),
+        text,
+        time: textOr(rawMessage.time, '03:46 PM'),
+        date: textOr(rawMessage.date, 'June 25'),
+      };
+
+      if (typeof rawMessage.replyTo === 'number' && Number.isInteger(rawMessage.replyTo)) {
+        message.replyTo = rawMessage.replyTo;
+      }
+
+      return message;
+    })
+    .filter((message): message is ReviewMessage => Boolean(message));
+
+  if (!messages.length) return null;
+
+  const fallbackName = `Customer ${index + 1}`;
+  return {
+    id: textOr(value.id, `review-${index + 1}`),
+    title: textOr(value.title, `Review ${index + 1}`),
+    summary: textOr(value.summary, ''),
+    customerName: textOr(value.customerName, fallbackName),
+    pinnedText: textOr(value.pinnedText, ''),
+    messages,
+  };
+}
+
+function normalizeResult(value: unknown, count: number): GenerationResult {
+  if (!isObject(value)) throw new Error('Gemini returned JSON, but not the expected object.');
+
+  const sets = (Array.isArray(value.sets) ? value.sets : [])
+    .map(normalizeReviewSet)
+    .filter((set): set is ReviewSet => Boolean(set))
+    .slice(0, count);
+
+  if (!sets.length) throw new Error('Gemini returned no usable conversations.');
+
+  return {
+    confidence: typeof value.confidence === 'number' ? value.confidence : undefined,
+    toneTags: Array.isArray(value.toneTags) ? value.toneTags.filter((tag): tag is string => typeof tag === 'string') : [],
+    notes: typeof value.notes === 'string' ? value.notes : '',
+    sets,
+  };
+}
+
+async function readGeminiError(response: Response) {
+  const body = await response.text();
+  if (!body) return response.statusText;
+
+  try {
+    const parsed = JSON.parse(body);
+    if (typeof parsed?.error?.message === 'string') return parsed.error.message;
+  } catch {
+    // Fall through to trimmed raw body.
+  }
+
+  return body.slice(0, 500);
+}
 
 function cleanJson(text: string) {
   return text
@@ -26,7 +151,13 @@ function cleanJson(text: string) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = (await request.json()) as GenerateRequest;
+    let body: GenerateRequest;
+    try {
+      body = (await request.json()) as GenerateRequest;
+    } catch {
+      return NextResponse.json({ error: 'Request body must be valid JSON.' }, { status: 400 });
+    }
+
     const apiKey = process.env.GEMINI_API_KEY?.trim();
 
     if (!apiKey) {
@@ -94,23 +225,32 @@ Rules:
     }
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': apiKey,
+        },
         body: JSON.stringify({
           contents: [{ role: 'user', parts }],
           generationConfig: {
             temperature: 0.85,
             topP: 0.95,
-            responseMimeType: 'application/json',
+            maxOutputTokens: 20000,
+            responseFormat: {
+              text: {
+                mimeType: 'application/json',
+                schema: REVIEW_RESPONSE_SCHEMA,
+              },
+            },
           },
         }),
       }
     );
 
     if (!response.ok) {
-      const detail = await response.text();
+      const detail = await readGeminiError(response);
       return NextResponse.json({ error: 'Gemini request failed.', detail }, { status: response.status });
     }
 
@@ -121,8 +261,14 @@ Rules:
       return NextResponse.json({ error: 'Gemini returned an empty response.' }, { status: 502 });
     }
 
-    const parsed = JSON.parse(cleanJson(text));
-    return NextResponse.json(parsed);
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(cleanJson(text));
+    } catch {
+      return NextResponse.json({ error: 'Gemini returned invalid JSON.' }, { status: 502 });
+    }
+
+    return NextResponse.json(normalizeResult(parsed, count));
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Unknown generation error.' },

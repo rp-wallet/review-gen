@@ -173,7 +173,10 @@ export default function AiReviewsPage() {
         }),
       });
       const payload = await res.json();
-      if (!res.ok) throw new Error(payload?.error || 'Generation failed.');
+      if (!res.ok) {
+        const detail = typeof payload?.detail === 'string' && payload.detail.trim() ? ` ${payload.detail}` : '';
+        throw new Error(`${payload?.error || 'Generation failed.'}${detail}`);
+      }
       const sets: ReviewSet[] = payload?.sets ?? [];
       if (!sets.length) throw new Error('The model returned no conversations.');
       setResult(payload);
@@ -300,7 +303,7 @@ export default function AiReviewsPage() {
 
         {/* ── Generator panel ────────────────────────────────────── */}
         <aside className="dashboard-sidebar">
-          <div className="panel-head">
+          <div className="panel-head py-5">
             <div>
               <h2 className="text-[15px] font-semibold tracking-tight text-foreground">Generator</h2>
               <p className="text-[12px] text-muted-foreground">Configure, then generate</p>

@@ -9,9 +9,9 @@ interface HeaderProps {
   avatarColor?: string;
 }
 
-export default function Header({ 
-  title = "Alfz", 
-  subtitle = "In Larper_wallet_support_team", 
+export default function Header({
+  title = "Alfz",
+  subtitle = "In Larper_wallet_support_team",
   unreadCount = 154
 }: HeaderProps) {
   return (
