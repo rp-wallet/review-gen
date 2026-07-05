@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { DEVICE_LIST, DeviceId, DEFAULT_DEVICE_ID } from '@/lib/devices';
 
 interface WorkspaceHeaderProps {
   title: string;
@@ -16,6 +17,9 @@ interface WorkspaceHeaderProps {
   meta?: React.ReactNode;
   /** Right-aligned actions (buttons). */
   children?: React.ReactNode;
+  /** Selected device mockup; pass with onDeviceChange to control it. */
+  device?: DeviceId;
+  onDeviceChange?: (device: DeviceId) => void;
 }
 
 export default function WorkspaceHeader({
@@ -23,6 +27,8 @@ export default function WorkspaceHeader({
   subtitle,
   meta,
   children,
+  device = DEFAULT_DEVICE_ID,
+  onDeviceChange,
 }: WorkspaceHeaderProps) {
   return (
     <header className="workspace-header">
@@ -35,16 +41,18 @@ export default function WorkspaceHeader({
       </div>
 
       <div className="flex flex-none items-center gap-2.5">
-        {/* Device mockup selector — single option for now, preselected. */}
-        <Select defaultValue="iphone-16-pro">
-          <SelectTrigger className="header-device w-[172px]" aria-label="Device mockup">
+        {/* Device mockup selector — drives the preview screen size. */}
+        <Select value={device} onValueChange={(v) => onDeviceChange?.(v as DeviceId)}>
+          <SelectTrigger className="header-device w-[188px]" aria-label="Device mockup">
             <span className="flex items-center gap-2">
               <Smartphone size={14} className="text-muted-foreground" />
               <SelectValue />
             </span>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="iphone-16-pro">iPhone 16 Pro</SelectItem>
+            {DEVICE_LIST.map((d) => (
+              <SelectItem key={d.id} value={d.id}>{d.label}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
 

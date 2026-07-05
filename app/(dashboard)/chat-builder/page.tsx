@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { ReviewSet, ReviewMessage } from '@/lib/types';
+import { DeviceId, DEFAULT_DEVICE_ID, getDevice } from '@/lib/devices';
 import PhonePreview from '@/components/PhonePreview';
 import WorkspaceHeader from '@/components/WorkspaceHeader';
 import { exportChatScreenshot } from '@/lib/export-screenshot';
@@ -51,6 +52,8 @@ type BuilderImport = {
   botAvatarColor?: string;
   botAvatarImage?: string;
   showProfileIntro?: boolean;
+  hideNames?: boolean;
+  device?: DeviceId;
 };
 
 function cleanMessages(messages: ReviewMessage[]) {
@@ -68,6 +71,8 @@ export default function ChatBuilderPage() {
   const [pinnedText, setPinnedText] = useState('🆔 998877665 🤑 @marketing_pro 👤 Marketing Pro ✅ Pro Plan 🌐 Language: en');
   const [showProfileIntro, setShowProfileIntro] = useState(true);
   const [statusBarTime, setStatusBarTime] = useState('09:41');
+  const [hideNames, setHideNames] = useState(false);
+  const [device, setDevice] = useState<DeviceId>(DEFAULT_DEVICE_ID);
 
   const [botName, setBotName] = useState('ReviewMockupBot');
   const [botAvatarInitial, setBotAvatarInitial] = useState('R');
@@ -129,6 +134,8 @@ export default function ChatBuilderPage() {
         setBotAvatarInitial(payload.botAvatarInitial || 'R');
         setBotAvatarColor(payload.botAvatarColor || '#8774e1');
         setBotAvatarImage(payload.botAvatarImage || '');
+        setHideNames(Boolean(payload.hideNames));
+        setDevice(getDevice(payload.device).id);
         setMessages(cleanMessages(imported.messages));
         setSelectedIdx(null);
         setDragIdx(null);
@@ -234,6 +241,8 @@ export default function ChatBuilderPage() {
         title="Chat Builder"
         subtitle="Create beautiful chat screenshots in seconds"
         meta={`${messages.length} messages`}
+        device={device}
+        onDeviceChange={setDevice}
       >
         <Button variant="brand" onClick={handleExport} disabled={exporting}>
           {exporting ? <Loader2 className="animate-spin" /> : <Download />}
@@ -342,6 +351,8 @@ export default function ChatBuilderPage() {
           botAvatarColor={botAvatarColor}
           botAvatarImage={botAvatarImage}
           showProfileIntro={showProfileIntro}
+          hideNames={hideNames}
+          device={device}
           downloadName={customerName || 'chat'}
           hideCta
           hostRef={previewHostRef}
@@ -471,6 +482,13 @@ export default function ChatBuilderPage() {
                       <input id="cust-color" type="color" className="dash-color" value={avatarColor} onChange={(e) => setAvatarColor(e.target.value)} />
                     </div>
                   </div>
+                  <label htmlFor="hide-names" className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-border bg-muted/20 px-3 py-2.5">
+                    <span className="flex flex-col gap-0.5">
+                      <span className="text-[13px] font-medium text-foreground">Hide names</span>
+                      <span className="text-[11.5px] text-muted-foreground">Marker stroke over the header name and pinned username</span>
+                    </span>
+                    <Switch id="hide-names" checked={hideNames} onCheckedChange={setHideNames} />
+                  </label>
                 </CardContent>
               </Card>
 

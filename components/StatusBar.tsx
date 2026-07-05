@@ -2,9 +2,15 @@ import React from 'react';
 
 type StatusBarProps = {
   time?: string;
+  /**
+   * 'island' draws the Dynamic Island pill. 'notch' (iPhone 16e) draws
+   * nothing — the notch is a hardware cutout and never shows up in a real
+   * iOS screenshot.
+   */
+  cutout?: 'island' | 'notch';
 };
 
-export default function StatusBar({ time }: StatusBarProps) {
+export default function StatusBar({ time, cutout = 'island' }: StatusBarProps) {
   const now = new Date();
   const hours = now.getHours();
   const minutes = now.getMinutes().toString().padStart(2, '0');
@@ -17,16 +23,18 @@ export default function StatusBar({ time }: StatusBarProps) {
         {timeString}
       </span>
 
-      {/* Center — Dynamic Island (iPhone 16 Pro) */}
-      <div className="absolute left-1/2 -translate-x-1/2 top-[11px]">
-        <div
-          className="rounded-full bg-black"
-          style={{
-            width: '125px',
-            height: '35px',
-          }}
-        />
-      </div>
+      {/* Center — Dynamic Island (hidden on notch devices) */}
+      {cutout === 'island' && (
+        <div className="absolute left-1/2 -translate-x-1/2 top-[11px]">
+          <div
+            className="rounded-full bg-black"
+            style={{
+              width: '125px',
+              height: '35px',
+            }}
+          />
+        </div>
+      )}
 
       {/* Right — Signal, WiFi, Battery */}
       <div className="flex items-center gap-[5px] justify-end w-[70px]">

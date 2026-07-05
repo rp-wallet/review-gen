@@ -17,6 +17,7 @@ import {
   PencilLine,
 } from 'lucide-react';
 import { ReviewSet, GenerationResult } from '@/lib/types';
+import { DeviceId, DEFAULT_DEVICE_ID } from '@/lib/devices';
 import PhonePreview from '@/components/PhonePreview';
 import WorkspaceHeader from '@/components/WorkspaceHeader';
 import { exportChatScreenshot } from '@/lib/export-screenshot';
@@ -97,7 +98,8 @@ export default function AiReviewsPage() {
   const [count, setCount] = useState(5);
   const [minMessages, setMinMessages] = useState(15);
   const [maxMessages, setMaxMessages] = useState(24);
-  const [blurNames, setBlurNames] = useState(false);
+  const [hideNames, setHideNames] = useState(false);
+  const [device, setDevice] = useState<DeviceId>(DEFAULT_DEVICE_ID);
 
   // Generation state
   const [loading, setLoading] = useState(false);
@@ -190,7 +192,8 @@ export default function AiReviewsPage() {
         botAvatarColor,
         botAvatarImage,
         showProfileIntro: true,
-        blurNames,
+        hideNames,
+        device,
       })
     );
     router.push('/chat-builder');
@@ -249,6 +252,8 @@ export default function AiReviewsPage() {
         title="AI Reviews"
         subtitle="Generate unique conversations"
         meta={result ? `${result.sets.length} generated` : undefined}
+        device={device}
+        onDeviceChange={setDevice}
       >
         <Button variant="brand" onClick={handleExport} disabled={exporting || !selected.messages.length}>
           {exporting ? <Loader2 className="animate-spin" /> : <Download />}
@@ -342,7 +347,8 @@ export default function AiReviewsPage() {
           botAvatarColor={botAvatarColor}
           botAvatarImage={botAvatarImage}
           showProfileIntro
-          blurNames={blurNames}
+          hideNames={hideNames}
+          device={device}
           downloadName={selected.customerName || 'review'}
           hideCta
           hostRef={previewHostRef}
@@ -449,12 +455,12 @@ export default function AiReviewsPage() {
                       />
                     </div>
                   </div>
-                  <label htmlFor="ai-blur-names" className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-border bg-muted/20 px-3 py-2.5">
+                  <label htmlFor="ai-hide-names" className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-border bg-muted/20 px-3 py-2.5">
                     <span className="flex flex-col gap-0.5">
-                      <span className="text-[13px] font-medium text-foreground">Blur names</span>
-                      <span className="text-[11.5px] text-muted-foreground">Mosaic hide title and pinned username</span>
+                      <span className="text-[13px] font-medium text-foreground">Hide names</span>
+                      <span className="text-[11.5px] text-muted-foreground">Marker stroke over the header name and pinned username</span>
                     </span>
-                    <Switch id="ai-blur-names" checked={blurNames} onCheckedChange={setBlurNames} />
+                    <Switch id="ai-hide-names" checked={hideNames} onCheckedChange={setHideNames} />
                   </label>
                   <Button variant="brand" size="lg" onClick={generate} disabled={loading}>
                     {loading ? <Loader2 className="animate-spin" /> : <Wand2 />}

@@ -279,7 +279,7 @@ body {
 .tg-bubble--out {
   background-image: linear-gradient(to bottom, #9178e6 0%, #7a6fee 32%, #5385ef 72%, #3d8bf3 100%);
   background-attachment: fixed;
-  background-size: 402px 874px;
+  background-size: var(--screen-w, 402px) var(--screen-h, 874px);
   background-position: center;
   background-repeat: no-repeat;
   color: #fff;
@@ -359,7 +359,7 @@ body {
   right: -8.4px;
   background-image: linear-gradient(to bottom, #9178e6 0%, #7a6fee 32%, #5385ef 72%, #3d8bf3 100%);
   background-attachment: fixed;
-  background-size: 402px 874px;
+  background-size: var(--screen-w, 402px) var(--screen-h, 874px);
   background-position: center;
   background-repeat: no-repeat;
   transform: translateY(1px) scaleX(-1);
@@ -500,49 +500,60 @@ body {
   text-decoration: underline;
 }
 
-.mosaic-text {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  max-width: 100%;
-  vertical-align: -0.12em;
-  white-space: nowrap;
-}
-
-.mosaic-text__tile {
+/* ── Marker redaction — hand-drawn stroke over a hidden name ─────────
+   The real text sits underneath (invisible) so the ink is exactly as wide
+   as the name it hides, like a marker swiped over a screenshot. */
+.marker-strike {
+  position: relative;
   display: inline-block;
-  width: var(--tile-w);
-  height: var(--tile-h);
-  transform: translateY(var(--tile-y)) rotate(-1deg);
-  border-radius: 2px;
-  opacity: var(--tile-alpha);
+  max-width: 100%;
+  white-space: nowrap;
+  vertical-align: baseline;
+}
+
+.marker-strike__text {
+  visibility: hidden;
+}
+
+/* Main ink pass — opaque, uneven hand-drawn edges, slight per-name tilt,
+   overshooting the text a little on both ends like a real swipe. */
+.marker-strike::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  bottom: 0;
+  left: -6px;
+  right: -6px;
+  z-index: 1;
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0.16)),
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.18) 0 2px, rgba(0, 0, 0, 0.22) 2px 4px),
-    rgba(150, 156, 177, 0.88);
-  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.18);
+    linear-gradient(96deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0) 34%),
+    linear-gradient(180deg, #232326 0%, #111113 46%, #1d1d20 100%);
+  border-radius: 9px 3px 10px 4px / 4px 10px 3px 9px;
+  transform: rotate(var(--marker-tilt, -0.7deg));
+  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.35);
 }
 
-.mosaic-text__tile:nth-child(3n) {
-  transform: translateY(var(--tile-y)) rotate(1.5deg);
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.12)),
-    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.16) 0 2px, rgba(0, 0, 0, 0.2) 2px 4px),
-    rgba(114, 121, 145, 0.9);
+/* Second pass — the darker core band where the pen went back over it. */
+.marker-strike::after {
+  content: "";
+  position: absolute;
+  top: 22%;
+  bottom: 18%;
+  left: -8px;
+  right: -3px;
+  z-index: 2;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 7px 11px 5px 9px / 9px 5px 11px 7px;
+  transform: rotate(calc(var(--marker-tilt, -0.7deg) * -0.5));
 }
 
-.mosaic-text__tile:nth-child(4n) {
-  border-radius: 1px;
-  opacity: calc(var(--tile-alpha) - 0.08);
-}
-
-.mosaic-text--header {
-  max-width: 124px;
+.marker-strike--header {
+  max-width: 132px;
   overflow: hidden;
 }
 
-.mosaic-text--inline {
-  margin: 0 2px;
+.marker-strike--inline {
+  margin: 0 3px;
 }
 
 /* ===================================================================
@@ -1227,16 +1238,17 @@ body {
   box-shadow: none;
 }
 
-/* Phone renders at a FIXED 402x874 (iPhone 16 Pro pt) so layout/wrapping is
-   identical at any browser zoom or window height. It is then scaled to fit the
-   available space via --phone-scale (set from JS). A screenshot of this element
-   is always a consistent 402x874. */
+/* Phone renders at a FIXED --screen-w x --screen-h (logical pt of the chosen
+   device, default iPhone 16 Pro 402x874) so layout/wrapping is identical at
+   any browser zoom or window height. It is then scaled to fit the available
+   space via --phone-scale (set from JS). A screenshot of this element is
+   always a consistent screen-size render. */
 .dashboard-preview-wrap>.chat-bg {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 402px;
-  height: 874px;
+  width: var(--screen-w, 402px);
+  height: var(--screen-h, 874px);
   transform-origin: center center;
   border-radius: 55px;
   z-index: 2;
@@ -1267,8 +1279,8 @@ body {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 432px;
-  height: 904px;
+  width: calc(var(--screen-w, 402px) + 30px);
+  height: calc(var(--screen-h, 874px) + 30px);
   transform-origin: center center;
   border-radius: 70px;
   z-index: 1;

@@ -1,6 +1,15 @@
 export const SCREEN_WIDTH = 402;
 export const SCREEN_HEIGHT = 874;
 
+// The canvas sets --screen-w/--screen-h inline for the selected device, so
+// exports pick up the right dimensions without threading them through calls.
+function getScreenSize(node: HTMLElement) {
+  const style = getComputedStyle(node);
+  const width = Math.round(parseFloat(style.getPropertyValue('--screen-w'))) || SCREEN_WIDTH;
+  const height = Math.round(parseFloat(style.getPropertyValue('--screen-h'))) || SCREEN_HEIGHT;
+  return { width, height };
+}
+
 function nextFrame() {
   return new Promise<void>((resolve) => {
     requestAnimationFrame(() => resolve());
@@ -35,15 +44,15 @@ function getChatScrollBottomOffset(node: HTMLElement) {
   return Math.max(0, scroll.scrollHeight - scroll.clientHeight - scroll.scrollTop);
 }
 
-function createExportClone(node: HTMLElement) {
+function createExportClone(node: HTMLElement, width: number, height: number) {
   const clone = node.cloneNode(true) as HTMLElement;
 
   Object.assign(clone.style, {
     position: 'relative',
     top: '0',
     left: '0',
-    width: `${SCREEN_WIDTH}px`,
-    height: `${SCREEN_HEIGHT}px`,
+    width: `${width}px`,
+    height: `${height}px`,
     maxWidth: 'none',
     margin: '0',
     transform: 'none',
@@ -58,16 +67,17 @@ function createExportClone(node: HTMLElement) {
 
 /** Renders the given .chat-bg node server-side and downloads it as a PNG. */
 export async function exportChatScreenshot(node: HTMLElement, downloadName: string) {
+  const { width, height } = getScreenSize(node);
   const exportHost = document.createElement('div');
-  const exportNode = createExportClone(node);
+  const exportNode = createExportClone(node, width, height);
 
   try {
     Object.assign(exportHost.style, {
       position: 'fixed',
       top: '0',
       left: '0',
-      width: `${SCREEN_WIDTH}px`,
-      height: `${SCREEN_HEIGHT}px`,
+      width: `${width}px`,
+      height: `${height}px`,
       overflow: 'hidden',
       pointerEvents: 'none',
       zIndex: '-1',
@@ -95,8 +105,8 @@ export async function exportChatScreenshot(node: HTMLElement, downloadName: stri
       body: JSON.stringify({
         html,
         styles,
-        width: SCREEN_WIDTH,
-        height: SCREEN_HEIGHT,
+        width,
+        height,
         scrollBottomOffset,
       })
     });

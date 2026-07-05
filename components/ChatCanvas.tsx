@@ -6,8 +6,9 @@ import MessageInput from '@/components/MessageInput';
 import DateSeparator from '@/components/DateSeparator';
 import ScrollAnchor from '@/components/ScrollAnchor';
 import StatusBar from '@/components/StatusBar';
-import MosaicText from '@/components/MosaicText';
+import MarkerStrike from '@/components/MarkerStrike';
 import { ReviewSet, ReviewMessage } from '@/lib/types';
+import { DeviceId, getDevice } from '@/lib/devices';
 
 interface ChatCanvasProps {
   review: ReviewSet;
@@ -16,7 +17,8 @@ interface ChatCanvasProps {
   botAvatarColor?: string;
   botAvatarImage?: string;
   showProfileIntro?: boolean;
-  blurNames?: boolean;
+  hideNames?: boolean;
+  device?: DeviceId;
 }
 
 function profileIntroLines(text: string) {
@@ -27,9 +29,9 @@ function profileIntroLines(text: string) {
     .filter(Boolean);
 }
 
-function profileIntroContent(text: string, blurNames: boolean) {
+function profileIntroContent(text: string, hideNames: boolean) {
   const parts = profileIntroLines(text);
-  if (!blurNames) return parts.join('\n');
+  if (!hideNames) return parts.join('\n');
 
   return parts.map((line, index) => {
     const username = line.match(/@[A-Za-z0-9_]+/)?.[0];
@@ -40,11 +42,11 @@ function profileIntroContent(text: string, blurNames: boolean) {
         {username ? (
           <>
             {line.slice(0, line.indexOf(username))}
-            <MosaicText text={username} className="mosaic-text--inline" />
+            <MarkerStrike text={username} className="marker-strike--inline" />
           </>
         ) : nameLine ? (
           <>
-            👤 <MosaicText text={nameLine} className="mosaic-text--inline" />
+            👤 <MarkerStrike text={nameLine} className="marker-strike--inline" />
           </>
         ) : (
           line
@@ -62,8 +64,10 @@ export default function ChatCanvas({
   botAvatarColor = '#3478F6',
   botAvatarImage = '',
   showProfileIntro = true,
-  blurNames = false
+  hideNames = false,
+  device
 }: ChatCanvasProps) {
+  const screen = getDevice(device);
   const bot = {
     name: botName,
     role: 'admin',
@@ -95,7 +99,14 @@ export default function ChatCanvas({
   }, [review.messages]);
 
   return (
-    <div className="flex flex-col h-[100dvh] max-w-[430px] mx-auto relative overflow-hidden chat-bg">
+    <div
+      className="flex flex-col h-[100dvh] mx-auto relative overflow-hidden chat-bg"
+      style={{
+        '--screen-w': `${screen.width}px`,
+        '--screen-h': `${screen.height}px`,
+        maxWidth: `${screen.width}px`,
+      } as React.CSSProperties}
+    >
       {/* ░░ Frosted glass overlay — gradual fade ░░ */}
       <div
         className="chat-glass chat-glass--top absolute top-0 left-0 w-full z-40 pointer-events-none"
@@ -111,13 +122,13 @@ export default function ChatCanvas({
 
       {/* ░░ Floating Top — pills on top ░░ */}
       <div className="absolute top-0 left-0 w-full z-50 flex flex-col gap-2 px-2 pb-3">
-        <StatusBar time={review.statusBarTime} />
+        <StatusBar time={review.statusBarTime} cutout={screen.cutout} />
         <Header
           title={review.customerName || 'Customer'}
           subtitle={`${review.messages?.length || 0} messages`}
-          blurName={blurNames}
+          hideName={hideNames}
         />
-        {showPinnedProfile && <PinnedMessage text={profileText} blurNames={blurNames} />}
+        {showPinnedProfile && <PinnedMessage text={profileText} hideNames={hideNames} />}
       </div>
 
       {/* ░░ Scrollable Chat Area ░░ */}
@@ -149,7 +160,7 @@ export default function ChatCanvas({
                     isLast
                     richContent={(
                       <span className="whitespace-pre-wrap">
-                        {profileIntroContent(profileText, blurNames)}
+                        {profileIntroContent(profileText, hideNames)}
                       </span>
                     )}
                   />

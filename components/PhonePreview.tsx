@@ -5,6 +5,7 @@ import { Download, Loader2 } from 'lucide-react';
 import ChatCanvas from '@/components/ChatCanvas';
 import { Button } from '@/components/ui/button';
 import { ReviewSet } from '@/lib/types';
+import { DeviceId, getDevice } from '@/lib/devices';
 import { exportChatScreenshot } from '@/lib/export-screenshot';
 
 const StableChatCanvas = memo(ChatCanvas);
@@ -16,7 +17,8 @@ interface PhonePreviewProps {
   botAvatarColor?: string;
   botAvatarImage?: string;
   showProfileIntro?: boolean;
-  blurNames?: boolean;
+  hideNames?: boolean;
+  device?: DeviceId;
   downloadName?: string;
   /** Hide the built-in CTA when the page renders its own export button. */
   hideCta?: boolean;
@@ -31,7 +33,8 @@ export default function PhonePreview({
   botAvatarColor,
   botAvatarImage,
   showProfileIntro,
-  blurNames = false,
+  hideNames = false,
+  device,
   downloadName = 'review',
   hideCta = false,
   hostRef,
@@ -39,15 +42,16 @@ export default function PhonePreview({
   const previewRef = useRef<HTMLDivElement>(null);
   const [phoneReady, setPhoneReady] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const screen = getDevice(device);
 
-  // Scale the fixed 402x874 screen (inside its 420x892 iPhone frame) to fit the
-  // dock. useLayoutEffect sets --phone-scale before paint so the phone never
-  // flashes at the wrong size; a loader covers the frame until first measure.
+  // Scale the fixed device screen (plus the 30px iPhone rim around it) to fit
+  // the dock. useLayoutEffect sets --phone-scale before paint so the phone
+  // never flashes at the wrong size; a loader covers the frame until measured.
   useLayoutEffect(() => {
     const el = previewRef.current;
     if (!el) return;
     const update = () => {
-      const scale = Math.min(el.clientWidth / 432, el.clientHeight / 902, 1);
+      const scale = Math.min(el.clientWidth / (screen.width + 30), el.clientHeight / (screen.height + 30), 1);
       el.style.setProperty('--phone-scale', String(scale));
     };
     update();
@@ -58,7 +62,7 @@ export default function PhonePreview({
       observer.disconnect();
       window.clearTimeout(reveal);
     };
-  }, []);
+  }, [screen.width, screen.height]);
 
   const handleDownload = async () => {
     const node = previewRef.current?.querySelector<HTMLElement>('.chat-bg');
@@ -78,6 +82,10 @@ export default function PhonePreview({
     <section className="preview-dock">
       <div
         className={`dashboard-preview-wrap dashboard-panel${phoneReady ? ' is-ready' : ''}`}
+        style={{
+          '--screen-w': `${screen.width}px`,
+          '--screen-h': `${screen.height}px`,
+        } as React.CSSProperties}
         ref={(el) => {
           previewRef.current = el;
           if (hostRef) hostRef.current = el;
@@ -99,7 +107,8 @@ export default function PhonePreview({
           botAvatarColor={botAvatarColor}
           botAvatarImage={botAvatarImage}
           showProfileIntro={showProfileIntro}
-          blurNames={blurNames}
+          hideNames={hideNames}
+          device={device}
         />
       </div>
 
