@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
+  ArrowDownUp,
   FolderDown,
-  Loader2,
   LogIn,
   MessageSquare,
   Camera,
@@ -86,6 +86,42 @@ function lastMessageText(row: ExportRow) {
   return messages?.length ? messages[messages.length - 1].text : '';
 }
 
+function ExportsLoadingSkeleton() {
+  return (
+    <div className="exports-skeleton" role="status" aria-label="Loading exports">
+      <span className="sr-only">Loading exports</span>
+      <div className="exports-skeleton__main">
+        <div className="exports-skeleton__banner" />
+        <div className="exports-skeleton__list">
+          {[0, 1, 2].map((item) => (
+            <div className="exports-skeleton-card" key={item}>
+              <div className="exports-skeleton-card__preview">
+                <span />
+                <span />
+                <span />
+              </div>
+              <div className="exports-skeleton-card__body">
+                <span className="exports-skeleton-card__title" />
+                <span className="exports-skeleton-card__line" />
+                <span className="exports-skeleton-card__chips" />
+              </div>
+              <span className="exports-skeleton-card__button" />
+            </div>
+          ))}
+        </div>
+      </div>
+      <aside className="exports-skeleton__details" aria-hidden="true">
+        <span className="exports-skeleton__avatar" />
+        <span className="exports-skeleton__detail-line exports-skeleton__detail-line--wide" />
+        <span className="exports-skeleton__detail-line" />
+        <span className="exports-skeleton__detail-block" />
+        <span className="exports-skeleton__detail-block" />
+        <span className="exports-skeleton__detail-action" />
+      </aside>
+    </div>
+  );
+}
+
 export default function ExportsPage() {
   const router = useRouter();
   const { data: session, isPending } = useSession();
@@ -95,14 +131,13 @@ export default function ExportsPage() {
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<'newest' | 'oldest'>('newest');
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [bannerOpen, setBannerOpen] = useState(true);
+  const [bannerOpen, setBannerOpen] = useState(() => (
+    typeof window === 'undefined' ? true : window.localStorage.getItem(BANNER_KEY) !== '1'
+  ));
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    setBannerOpen(window.localStorage.getItem(BANNER_KEY) !== '1');
-  }, []);
-
   const load = useCallback(async () => {
+    await Promise.resolve();
     setLoading(true);
     try {
       const response = await fetch('/api/exports');
@@ -120,7 +155,11 @@ export default function ExportsPage() {
   }, []);
 
   useEffect(() => {
-    if (session?.user) load();
+    if (!session?.user) return undefined;
+    const timeout = window.setTimeout(() => {
+      void load();
+    }, 0);
+    return () => window.clearTimeout(timeout);
   }, [load, session?.user]);
 
   const filtered = useMemo(() => {
@@ -177,41 +216,59 @@ export default function ExportsPage() {
         title="Exports"
         subtitle="Open previous exports and continue editing the source chat"
         meta={rows?.length ? `${rows.length} exports` : undefined}
+        showPreviewControls={false}
       >
-        <div className="exports-search">
-          <Search size={14} />
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search exports…"
-            aria-label="Search exports"
-          />
-        </div>
-        <Select value={sort} onValueChange={(value) => setSort(value as 'newest' | 'oldest')}>
-          <SelectTrigger size="sm" aria-label="Sort exports" className="w-[130px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="newest">Sort: Newest</SelectItem>
-            <SelectItem value="oldest">Sort: Oldest</SelectItem>
-          </SelectContent>
-        </Select>
+        {session?.user && (
+          <>
+            <div className="exports-search">
+              <Search size={14} />
+              <input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search exports…"
+                aria-label="Search exports"
+              />
+            </div>
+            <Select value={sort} onValueChange={(value) => setSort(value as 'newest' | 'oldest')}>
+              <SelectTrigger size="sm" aria-label="Sort exports" className="exports-sort-trigger">
+                <span className="exports-sort-trigger__value">
+                  <ArrowDownUp size={13} />
+                  <SelectValue />
+                </span>
+              </SelectTrigger>
+              <SelectContent className="exports-sort-content" align="end">
+                <SelectItem value="newest">Newest first</SelectItem>
+                <SelectItem value="oldest">Oldest first</SelectItem>
+              </SelectContent>
+            </Select>
+          </>
+        )}
       </WorkspaceHeader>
 
       {!session?.user && !isPending ? (
-        <div className="exports-empty">
-          <FolderDown size={26} className="text-muted-foreground" />
-          <p className="text-sm font-medium text-foreground">Sign in to see your exports</p>
-          <p className="text-[13px] text-muted-foreground">Your export history is saved to your account.</p>
-          <Button variant="brand" size="sm" onClick={() => setAuthOpen(true)}>
-            <LogIn size={14} />
-            Sign in
-          </Button>
+        <div className="exports-auth">
+          <div className="exports-auth__panel">
+            <span className="exports-auth__icon">
+              <FolderDown size={22} />
+            </span>
+            <div>
+              <p className="exports-auth__eyebrow">Export history</p>
+              <h2>Sign in to see your exports</h2>
+              <p>Saved chats and metadata stay tied to your account.</p>
+            </div>
+            <Button variant="brand" size="sm" onClick={() => setAuthOpen(true)}>
+              <LogIn size={14} />
+              Sign in
+            </Button>
+          </div>
+          <div className="exports-auth__preview" aria-hidden="true">
+            <span className="exports-auth__preview-bar" />
+            <span className="exports-auth__preview-card" />
+            <span className="exports-auth__preview-card exports-auth__preview-card--short" />
+          </div>
         </div>
       ) : loading || rows === null ? (
-        <div className="exports-empty">
-          <Loader2 size={22} className="animate-spin text-muted-foreground" />
-        </div>
+        <ExportsLoadingSkeleton />
       ) : rows.length === 0 ? (
         <div className="exports-empty">
           <FolderDown size={26} className="text-muted-foreground" />
