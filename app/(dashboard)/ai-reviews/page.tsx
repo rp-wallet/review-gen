@@ -17,6 +17,7 @@ import {
   Download,
   FolderArchive,
   PencilLine,
+  Sparkles,
 } from 'lucide-react';
 import { ReviewSet, GenerationResult } from '@/lib/types';
 import { DeviceId } from '@/lib/devices';
@@ -122,6 +123,11 @@ export default function AiReviewsPage() {
   // Generation state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Refine state — one prompt box, applied to the selected set or all of them.
+  const [refinePrompt, setRefinePrompt] = useState('');
+  const [refining, setRefining] = useState<'selected' | 'all' | null>(null);
+  const [refineError, setRefineError] = useState('');
 
   const [exporting, setExporting] = useState(false);
   const [bulk, setBulk] = useState<{ done: number; total: number } | null>(null);
@@ -279,6 +285,49 @@ export default function AiReviewsPage() {
     }
   }, [count, examples, maxMessages, minMessages, productDesc, productName, fetchMe, session?.user?.id, setResult, setSelectedId]);
 
+  const runRefine = useCallback(
+    async (scope: 'selected' | 'all') => {
+      if (!result || refining) return;
+      const instruction = refinePrompt.trim();
+      if (!instruction) return;
+      if (!session?.user || !me.isPro) {
+        setAuthModal('upgrade');
+        return;
+      }
+      const targets = scope === 'selected'
+        ? result.sets.filter((s) => s.id === selected.id)
+        : result.sets;
+      if (!targets.length) return;
+
+      setRefining(scope);
+      setRefineError('');
+      try {
+        const res = await fetch('/api/refine-reviews', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ instruction, sets: targets, product: productName }),
+        });
+        const payload = await res.json();
+        if (!res.ok) {
+          if (payload?.error === 'auth_required' || payload?.error === 'upgrade_required') {
+            setAuthModal('upgrade');
+            return;
+          }
+          throw new Error(payload?.error || 'Refine failed.');
+        }
+        const refined: ReviewSet[] = payload?.sets ?? [];
+        const byId = new Map(refined.map((s) => [s.id, s]));
+        setResult({ ...result, sets: result.sets.map((s) => byId.get(s.id) ?? s) });
+        setRefinePrompt('');
+      } catch (err) {
+        setRefineError(err instanceof Error ? err.message : 'Refine failed.');
+      } finally {
+        setRefining(null);
+      }
+    },
+    [me.isPro, productName, refinePrompt, refining, result, selected.id, session?.user, setResult]
+  );
+
   const runExport = useCallback(async () => {
     const node = previewHostRef.current?.querySelector<HTMLElement>('.chat-bg');
     if (!node) return;
@@ -435,12 +484,12 @@ export default function AiReviewsPage() {
         onDeviceChange={setDevice}
       >
         {(result?.sets.length ?? 0) > 1 && (
-          <Button variant="outline" onClick={handleBulkDownload} disabled={!!bulk || exporting || loading}>
+          <Button variant="outline" onClick={handleBulkDownload} disabled={!!bulk || exporting || loading || !!refining}>
             {bulk ? <Loader2 className="animate-spin" /> : <FolderArchive />}
             {bulk ? `Zipping ${bulk.done}/${bulk.total}…` : 'Download all (ZIP)'}
           </Button>
         )}
-        <Button variant="brand" onClick={handleExport} disabled={exporting || !!bulk || !selected.messages.length}>
+        <Button variant="brand" onClick={handleExport} disabled={exporting || !!bulk || !!refining || !selected.messages.length}>
           {exporting ? <Loader2 className="animate-spin" /> : <Download />}
           {exporting ? 'Rendering…' : 'Export screenshot'}
         </Button>
@@ -647,7 +696,7 @@ export default function AiReviewsPage() {
                     </span>
                     <Switch id="ai-hide-names" checked={hideNames} onCheckedChange={setHideNames} />
                   </label>
-                  <Button variant="brand" size="lg" onClick={generate} disabled={loading}>
+                  <Button variant="brand" size="lg" onClick={generate} disabled={loading || !!refining}>
                     {loading ? <Loader2 className="animate-spin" /> : <Wand2 />}
                     {loading ? 'Generating…' : `Generate ${count}`}
                   </Button>
@@ -659,6 +708,52 @@ export default function AiReviewsPage() {
                   )}
                 </CardContent>
               </Card>
+
+              {result && !loading && selected.messages.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Sparkles size={14} className="text-brand" />
+                      Refine with AI
+                    </CardTitle>
+                    <CardDescription>Describe a change, then apply it to one review or all of them</CardDescription>
+                  </CardHeader>
+                  <CardContent className="flex flex-col gap-3 pt-4">
+                    <Separator />
+                    <Textarea
+                      value={refinePrompt}
+                      onChange={(e) => setRefinePrompt(e.target.value)}
+                      className="min-h-20"
+                      placeholder="e.g. Make the customer more skeptical at first, or mention the mobile app…"
+                      disabled={!!refining}
+                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => runRefine('selected')}
+                        disabled={!!refining || !refinePrompt.trim()}
+                      >
+                        {refining === 'selected' ? <Loader2 className="animate-spin" /> : <Sparkles />}
+                        This review
+                      </Button>
+                      <Button
+                        variant="brand"
+                        onClick={() => runRefine('all')}
+                        disabled={!!refining || !refinePrompt.trim()}
+                      >
+                        {refining === 'all' ? <Loader2 className="animate-spin" /> : <Wand2 />}
+                        All {result.sets.length}
+                      </Button>
+                    </div>
+                    {refineError && (
+                      <p className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 p-2.5 text-[12px] text-destructive">
+                        <AlertTriangle size={14} className="mt-px shrink-0" />
+                        {refineError}
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
 
               {result && !loading && selected.messages.length > 0 && (
                 <Card>

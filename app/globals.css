@@ -44,13 +44,13 @@
     monospace;
   --tg-font-weight-normal: 400;
   --tg-font-weight-bold: 500;
-  --tg-text-size: 16px;
-  /* --messages-text-size */
+  --tg-text-size: 17px;
+  /* --messages-text-size — iOS Telegram body is 17pt */
   --tg-line-height: 1.3125;
   /* --messages-line-height */
-  --tg-time-size: 12px;
-  /* messages-text-size - 4 */
-  --tg-name-size: 13px;
+  --tg-time-size: 11px;
+  /* iOS Telegram bubble timestamp */
+  --tg-name-size: 15px;
   --tg-service-size: 15px;
   /* messages-text-size - 1 */
 
@@ -59,7 +59,7 @@
   --tg-chat-bubbles-pad: 0.5rem;
   /* 8px */
   --tg-topbar-height: 3.25rem;
-  --tg-avatar-size: 40px;
+  --tg-avatar-size: 45px;
 
   /* Bubble Geometry */
   --tg-bubble-radius: 18px;
@@ -226,7 +226,7 @@ body {
   justify-content: center;
   color: white;
   font-weight: var(--tg-font-weight-bold);
-  font-size: 18px;
+  font-size: 20px;
 }
 
 /* Stack of bubbles inside a group */
@@ -399,7 +399,7 @@ body {
 .tg-name-title {
   font-size: var(--tg-name-size);
   font-weight: var(--tg-font-weight-bold);
-  line-height: 18px;
+  line-height: 20px;
   color: var(--tg-peer-3-color);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2009,6 +2009,66 @@ body {
   height: 1px;
   margin: 5px 8px;
   background: rgba(255, 255, 255, 0.07);
+}
+
+/* Session-resolving placeholder — mirrors .account-card so the sidebar
+   footer keeps its size while better-auth restores the session. */
+.account-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin-top: 8px;
+  padding: 9px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.account-skeleton__avatar {
+  position: relative;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+
+.account-skeleton__lines {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.account-skeleton__line {
+  position: relative;
+  display: block;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+
+.account-skeleton__line--name {
+  width: 72%;
+}
+
+.account-skeleton__line--plan {
+  width: 44%;
+  height: 8px;
+}
+
+.account-skeleton__avatar::after,
+.account-skeleton__line::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+  animation: exports-shimmer 1.45s ease-in-out infinite;
 }
 
 /* Guest state — a single prominent sign-in action. */

@@ -33,7 +33,7 @@ export default function MessageInput() {
           onChange={(e) => setMessage(e.target.value)}
           placeholder="Message"
           rows={1}
-          className="relative z-[1] flex-1 bg-transparent text-white placeholder-[var(--tg-text-secondary)] outline-none resize-none text-[16px] leading-[24px] min-h-[24px] max-h-[120px]"
+          className="relative z-[1] flex-1 bg-transparent text-white placeholder-[var(--tg-text-secondary)] outline-none resize-none text-[17px] leading-[24px] min-h-[24px] max-h-[120px]"
           style={{ fontFamily: 'var(--tg-font)' }}
         />
         <button className="relative z-[1] flex items-center justify-center size-[32px] rounded-full text-[var(--tg-text-secondary)] hover:text-white transition-colors duration-200 shrink-0 ml-1">

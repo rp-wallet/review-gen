@@ -34,7 +34,7 @@ export default function Header({
       <div
         className="liquid-glass flex flex-1 flex-col min-w-[160px] justify-center items-center h-[42px] rounded-full overflow-hidden shrink-0"
       >
-        <span className="relative z-[1] text-[15.5px] font-medium leading-[20px] text-white truncate px-4 tracking-[-0.01em]">
+        <span className="relative z-[1] text-[17px] font-medium leading-[21px] text-white truncate px-4 tracking-[-0.01em]">
           {hideName ? <MarkerStrike text={title} className="marker-strike--header" /> : title}
         </span>
         <span className="relative z-[1] text-[12px] leading-[15px] text-[#dddaf1] truncate px-4 -translate-y-0.5">{subtitle}</span>

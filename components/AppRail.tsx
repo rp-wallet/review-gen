@@ -39,7 +39,7 @@ const SOON = [
 export default function AppRail() {
   const pathname = usePathname();
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, isPending } = useSession();
   const me = useAppStore((s) => s.me);
   const fetchMe = useAppStore((s) => s.fetchMe);
   const resetMe = useAppStore((s) => s.resetMe);
@@ -48,6 +48,13 @@ export default function AppRail() {
   const [authOpen, setAuthOpen] = useState(false);
   const [portalBusy, setPortalBusy] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
+
+  // SSR and the first client render disagree on isPending (better-auth only
+  // resolves the session client-side), so both render the skeleton until
+  // after hydration to keep the trees identical.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const sessionResolving = !mounted || isPending;
 
   const user = session?.user;
   const displayName = user?.name || user?.email || 'Guest';
@@ -156,7 +163,17 @@ export default function AppRail() {
           Settings
         </span>
 
-        {!user ? (
+        {sessionResolving ? (
+          // Session still resolving — placeholder shaped like the account card
+          // so neither the sign-in CTA nor user details flash in.
+          <div className="account-skeleton" aria-hidden="true">
+            <span className="account-skeleton__avatar" />
+            <span className="account-skeleton__lines">
+              <span className="account-skeleton__line account-skeleton__line--name" />
+              <span className="account-skeleton__line account-skeleton__line--plan" />
+            </span>
+          </div>
+        ) : !user ? (
           <div className="account-guest">
             <button type="button" className="account-guest__cta" onClick={() => setAuthOpen(true)}>
               <LogIn size={15} />
