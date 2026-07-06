@@ -168,7 +168,7 @@ export default function LandingPage() {
                       <span>Y</span>
                     </div>
                   )}
-                  {!m.out && !m.last && <div className="mr-2 w-[var(--tg-avatar-size)] shrink-0" />}
+                  {!m.out && !m.last && <div className="mr-[10px] w-[var(--tg-avatar-size)] shrink-0" />}
                   <div className="tg-group-bubbles">
                     <MessageBubble
                       id={`hero-${i}`}

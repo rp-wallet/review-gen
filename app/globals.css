@@ -62,7 +62,7 @@
   --tg-chat-bubbles-pad: 0.5rem;
   /* 8px */
   --tg-topbar-height: 3.25rem;
-  --tg-avatar-size: 45px;
+  --tg-avatar-size: 38px;
 
   /* Bubble Geometry */
   --tg-bubble-radius: 18px;
@@ -212,12 +212,13 @@ body {
   /* breathing room so the bubble tail doesn't touch the screen edge */
 }
 
-/* Avatar column — fixed 40px + 8px gap */
+/* Avatar column — iOS Telegram: 38pt circle, bubble edge 10pt away, bottom
+   flush with the last bubble (group is align-items: flex-end). */
 .tg-group-avatar {
   width: var(--tg-avatar-size);
   height: var(--tg-avatar-size);
   flex-shrink: 0;
-  margin-right: 8px;
+  margin-right: 10px;
   border-radius: 50%;
   overflow: hidden;
 }
@@ -231,7 +232,7 @@ body {
   justify-content: center;
   color: white;
   font-weight: var(--tg-font-weight-bold);
-  font-size: 20px;
+  font-size: 17px;
 }
 
 /* Stack of bubbles inside a group */
@@ -420,11 +421,16 @@ body {
   white-space: nowrap;
 }
 
+/* Admin rank — iOS peer-color capsule: name color text on same color at low
+   alpha. */
 .tg-name-rank {
-  font-size: 12px;
+  font-size: 13px;
   line-height: 16px;
-  color: var(--tg-text-secondary);
+  color: var(--tg-peer-3-color);
   flex-shrink: 0;
+  background: rgba(var(--tg-peer-3-color-rgb), 0.12);
+  padding: 1px 8px;
+  border-radius: 10px;
 }
 
 /* ===================================================================
