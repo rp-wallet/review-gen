@@ -106,16 +106,18 @@ export default function MessageBubble({
         </span>
       </div>
 
-      {/* Tail SVG — iOS Telegram fang. Fill is the shared fixed gradient via
-          CSS background + mask (path kept for shape reference). */}
+      {/* Tail SVG — iOS Telegram fang, traced from Telegram-iOS bubble path.
+          Overlaps the bubble's uniformly-rounded corner; fill is the shared
+          fixed gradient via CSS background + mask (path kept for shape
+          reference, must stay in sync with --tail-mask in globals.css). */}
       {isLast && (
         <svg
-          viewBox="0 0 12 21"
-          width="12"
+          viewBox="0 0 16 21"
+          width="16"
           height="21"
           className={`tg-tail ${isSent ? 'tg-tail--out' : 'tg-tail--in'}`}
         >
-          <path d="M0 0 C0.4 6.8 1.9 12.2 4.8 15.9 C6.9 18.6 9.8 20.4 12 21 L0 21 Z" />
+          <path d="M0 0 L9.83 0 L9.83 12.33 C9.88 15.45 10.61 18.92 15.97 21 C16.03 21 6.69 20.99 3.23 16.93 Z" />
         </svg>
       )}
     </div>

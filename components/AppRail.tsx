@@ -1,14 +1,12 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   MessageSquare,
   BotMessageSquare,
-  Camera,
-  UserRound,
   Settings,
   Coins,
   LogOut,
@@ -17,23 +15,20 @@ import {
   ChevronsUpDown,
   CreditCard,
   Gem,
-  Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { signOut, useSession } from '@/lib/auth-client';
 import { useAppStore } from '@/lib/store';
 import AuthModal from '@/components/AuthModal';
 
+const subscribeNoop = () => () => {};
+const getTrue = () => true;
+const getFalse = () => false;
+
 const TOOLS = [
   { href: '/chat-builder', icon: MessageSquare, label: 'Chat Builder' },
   { href: '/ai-reviews', icon: BotMessageSquare, label: 'AI Reviews' },
   { href: '/exports', icon: FolderDown, label: 'Exports' },
-];
-
-// Surfaced but disabled — signals the roadmap without being clickable yet.
-const SOON = [
-  { icon: Camera, label: 'Instagram' },
-  { icon: UserRound, label: 'Profiles' },
 ];
 
 export default function AppRail() {
@@ -46,14 +41,13 @@ export default function AppRail() {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
-  const [portalBusy, setPortalBusy] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
   // SSR and the first client render disagree on isPending (better-auth only
   // resolves the session client-side), so both render the skeleton until
-  // after hydration to keep the trees identical.
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  // after hydration to keep the trees identical. useSyncExternalStore returns
+  // the server snapshot (false) for the hydration render, true right after.
+  const mounted = useSyncExternalStore(subscribeNoop, getTrue, getFalse);
   const sessionResolving = !mounted || isPending;
 
   const user = session?.user;
@@ -85,22 +79,6 @@ export default function AppRail() {
     setMenuOpen(false);
     await signOut();
     resetMe();
-  };
-
-  const openBillingPortal = async () => {
-    setPortalBusy(true);
-    try {
-      const response = await fetch('/api/dodo/portal', { method: 'POST' });
-      const payload = await response.json();
-      if (response.ok && typeof payload?.url === 'string') {
-        window.location.href = payload.url;
-        return;
-      }
-    } catch {
-      // Fall through to closing the menu; nothing actionable client-side.
-    }
-    setPortalBusy(false);
-    setMenuOpen(false);
   };
 
   return (
@@ -144,24 +122,17 @@ export default function AppRail() {
           );
         })}
 
-        {SOON.map(({ icon: Icon, label }) => (
-          <span
-            key={label}
-            title={`${label} (soon)`}
-            aria-disabled="true"
-            className="app-sidebar__item is-disabled"
-          >
-            <Icon size={17} strokeWidth={2} />
-            {label}
-          </span>
-        ))}
       </div>
 
       <div className="app-sidebar__group app-sidebar__group--bottom">
-        <span className="app-sidebar__item is-disabled" aria-disabled="true" title="Settings (soon)">
+        <Link
+          href="/settings"
+          aria-current={pathname.startsWith('/settings') ? 'page' : undefined}
+          className={cn('app-sidebar__item', pathname.startsWith('/settings') && 'is-active')}
+        >
           <Settings size={17} strokeWidth={2} />
           Settings
-        </span>
+        </Link>
 
         {sessionResolving ? (
           // Session still resolving — placeholder shaped like the account card
@@ -191,16 +162,15 @@ export default function AppRail() {
                 </div>
                 <div className="account-menu__sep" />
                 {me.isPro ? (
-                  <button
-                    type="button"
+                  <Link
+                    href="/billing"
                     role="menuitem"
                     className="account-menu__row"
-                    onClick={openBillingPortal}
-                    disabled={portalBusy}
+                    onClick={() => setMenuOpen(false)}
                   >
-                    {portalBusy ? <Loader2 size={14} className="animate-spin" /> : <CreditCard size={14} />}
+                    <CreditCard size={14} />
                     Manage billing
-                  </button>
+                  </Link>
                 ) : (
                   <button
                     type="button"

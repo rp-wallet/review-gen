@@ -112,3 +112,12 @@ export const creditLedger = pgTable('credit_ledger', {
   meta: jsonb('meta'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 }, (table) => [index('credit_ledger_user_idx').on(table.userId, table.createdAt)]);
+
+/** Processed payment-webhook deliveries — the primary key makes retried
+ *  deliveries no-ops so credit grants can never double-apply. */
+export const webhookEvent = pgTable('webhook_event', {
+  /** Delivery id from the `webhook-id` header. */
+  id: text('id').primaryKey(),
+  type: text('type'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});

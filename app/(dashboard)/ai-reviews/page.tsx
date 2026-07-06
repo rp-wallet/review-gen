@@ -696,10 +696,24 @@ export default function AiReviewsPage() {
                     </span>
                     <Switch id="ai-hide-names" checked={hideNames} onCheckedChange={setHideNames} />
                   </label>
-                  <Button variant="brand" size="lg" onClick={generate} disabled={loading || !!refining}>
+                  <Button
+                    variant="brand"
+                    size="lg"
+                    onClick={generate}
+                    disabled={loading || !!refining || (me.isPro && me.credits < count)}
+                  >
                     {loading ? <Loader2 className="animate-spin" /> : <Wand2 />}
-                    {loading ? 'Generating…' : `Generate ${count}`}
+                    {loading
+                      ? 'Generating…'
+                      : me.isPro && me.credits < count
+                        ? 'Not enough credits'
+                        : `Generate ${count}`}
                   </Button>
+                  {me.isPro && (
+                    <p className="-mt-1 text-center text-[12px] text-muted-foreground">
+                      Uses {count} credit{count === 1 ? '' : 's'} · {me.credits} left
+                    </p>
+                  )}
                   {error && (
                     <p className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 p-2.5 text-[12px] text-destructive">
                       <AlertTriangle size={14} className="mt-px shrink-0" />

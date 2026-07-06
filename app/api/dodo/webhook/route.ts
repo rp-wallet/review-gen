@@ -2,12 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import type { WebhookPayload } from 'dodopayments/resources/webhook-events';
 import { db } from '@/db';
-import { creditLedger, subscription } from '@/db/schema';
+import { creditLedger, subscription, webhookEvent } from '@/db/schema';
 import { getDodoClient, getProProductIds } from '@/lib/dodo';
 
 export const runtime = 'nodejs';
 
 const MONTHLY_PRO_CREDITS = Number(process.env.PRO_MONTHLY_CREDITS || 100);
+
+// A yearly renewal covers 12 months of usage in one event.
+function grantAmountFor(productId: string) {
+  const yearly = process.env.DODO_PRODUCT_PRO_YEARLY?.trim();
+  return yearly && productId === yearly ? MONTHLY_PRO_CREDITS * 12 : MONTHLY_PRO_CREDITS;
+}
 
 function asWebhookPayload(value: unknown): WebhookPayload {
   return value as WebhookPayload;
@@ -67,7 +73,7 @@ async function upsertSubscription(event: WebhookPayload) {
   if (event.type === 'subscription.active' || event.type === 'subscription.renewed') {
     await db.insert(creditLedger).values({
       userId,
-      delta: MONTHLY_PRO_CREDITS,
+      delta: grantAmountFor(event.data.product_id),
       reason: 'monthly_grant',
       meta: {
         source: 'dodo',
@@ -86,6 +92,20 @@ export async function POST(request: NextRequest) {
     const event = asWebhookPayload(
       getDodoClient().webhooks.unwrap(rawBody, { headers: headerRecord })
     );
+
+    // Dodo retries deliveries; the webhook-id is stable per event, so a
+    // second delivery must not re-run side effects (credit grants).
+    const deliveryId = headerRecord['webhook-id'];
+    if (deliveryId) {
+      const inserted = await db
+        .insert(webhookEvent)
+        .values({ id: deliveryId, type: event.type ?? null })
+        .onConflictDoNothing()
+        .returning({ id: webhookEvent.id });
+      if (!inserted.length) {
+        return NextResponse.json({ received: true, duplicate: true });
+      }
+    }
 
     if (
       event.type === 'subscription.active' ||
