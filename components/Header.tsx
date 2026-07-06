@@ -24,7 +24,7 @@ export default function Header({
       {/* Back button */}
       <div className='flex-1'>
         <button
-          className="liquid-glass flex items-center justify-center size-[46px] rounded-full outline-none cursor-pointer relative text-white transition-transform duration-200 active:scale-95 shrink-0"
+          className="liquid-glass flex items-center justify-center size-[46px] rounded-full outline-none relative text-white shrink-0"
         >
           <ChevronLeft className="size-6 ml-[-2px] text-white relative z-[1]" strokeWidth={2} />
         </button>
@@ -43,7 +43,7 @@ export default function Header({
       {/* Right Avatar Pill */}
       <div className='flex-1 flex justify-end'>
         <button
-          className="liquid-glass flex items-center justify-center size-[46px] rounded-full shrink-0 transition-transform duration-200 active:scale-95"
+          className="liquid-glass flex items-center justify-center size-[46px] rounded-full shrink-0"
         >
           {/* Topic icon */}
           <span className="relative z-[1] w-[28px] h-[28px] flex items-center justify-center">

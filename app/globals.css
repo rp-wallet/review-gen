@@ -38,7 +38,10 @@
     "Segoe UI", sans-serif;
   --app-font-mono: "SF Mono", ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono",
     monospace;
-  --tg-font: "SF Pro Text", "SF Pro Display", -apple-system, BlinkMacSystemFont,
+  /* -apple-system (SF UI) must come first: user-installed "SF Pro Text" has
+     ~15% wider metrics, and the headless export browser picks it up while
+     regular browsers may not — preview and export then wrap differently. */
+  --tg-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
     "Helvetica Neue", "Segoe UI", sans-serif;
   --tg-font-mono: "SF Mono", ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono",
     monospace;
@@ -205,6 +208,8 @@ body {
   justify-content: flex-end;
   padding-left: 42px;
   /* keep outgoing from stretching too far left */
+  margin-right: 6px;
+  /* breathing room so the bubble tail doesn't touch the screen edge */
 }
 
 /* Avatar column — fixed 40px + 8px gap */

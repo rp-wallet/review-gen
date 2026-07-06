@@ -69,7 +69,7 @@ export default function PinnedMessage({ text, hideNames = false }: PinnedMessage
       </div>
 
       {/* Close button */}
-      <button className="relative z-[1] flex items-center justify-center size-[32px] rounded-full border-0 bg-transparent outline-none cursor-pointer text-[#c8c8cc] transition-colors duration-200 shrink-0 hover:bg-white/10 ml-1">
+      <button className="relative z-[1] flex items-center justify-center size-[32px] rounded-full border-0 bg-transparent outline-none text-[#c8c8cc] shrink-0 ml-1">
         <X className="size-[18px]" strokeWidth={2} />
       </button>
     </div>

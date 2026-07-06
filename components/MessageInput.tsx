@@ -21,7 +21,7 @@ export default function MessageInput() {
     <div className="flex items-center gap-[8px] w-full px-1 text-[var(--tg-text)]">
 
       {/* Attach */}
-      <button className="liquid-glass liquid-glass--gray flex items-center justify-center size-[42px] rounded-full shrink-0 text-white transition-transform duration-200 active:scale-95">
+      <button className="liquid-glass liquid-glass--gray flex items-center justify-center size-[42px] rounded-full shrink-0 text-white">
         <Paperclip className="relative z-[1] w-[24px] h-[24px]" strokeWidth={1.5} />
       </button>
 
@@ -36,7 +36,7 @@ export default function MessageInput() {
           className="relative z-[1] flex-1 bg-transparent text-white placeholder-[var(--tg-text-secondary)] outline-none resize-none text-[17px] leading-[24px] min-h-[24px] max-h-[120px]"
           style={{ fontFamily: 'var(--tg-font)' }}
         />
-        <button className="relative z-[1] flex items-center justify-center size-[32px] rounded-full text-[var(--tg-text-secondary)] hover:text-white transition-colors duration-200 shrink-0 ml-1">
+        <button className="relative z-[1] flex items-center justify-center size-[32px] rounded-full text-[var(--tg-text-secondary)] shrink-0 ml-1">
           <Image
             src="/telegram-sticker-logo.png"
             alt=""
@@ -51,7 +51,7 @@ export default function MessageInput() {
 
       {/* Send / Mic */}
       <button
-        className="liquid-glass liquid-glass--gray flex items-center justify-center size-[42px] rounded-full shrink-0 text-white transition-transform duration-200 active:scale-95"
+        className="liquid-glass liquid-glass--gray flex items-center justify-center size-[42px] rounded-full shrink-0 text-white"
         onClick={() => {
           if (message.trim()) {
             console.log('Sending message:', message);

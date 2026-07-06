@@ -151,6 +151,14 @@ export async function POST(request: Request) {
               height: ${screenHeight}px;
               overflow: hidden;
             }
+            /* Screenshots must never catch hover/active/focus or a
+               mid-transition frame on the mock UI controls. */
+            #export-root *,
+            #export-root *::before,
+            #export-root *::after {
+              transition: none !important;
+              animation: none !important;
+            }
           </style>
         </head>
         <body>
