@@ -24,7 +24,7 @@ export default function Header({
       {/* Back button */}
       <div className='flex-1'>
         <button
-          className="liquid-glass flex items-center justify-center size-[42px] rounded-full outline-none cursor-pointer relative text-white transition-transform duration-200 active:scale-95 shrink-0"
+          className="liquid-glass flex items-center justify-center size-[46px] rounded-full outline-none cursor-pointer relative text-white transition-transform duration-200 active:scale-95 shrink-0"
         >
           <ChevronLeft className="size-6 ml-[-2px] text-white relative z-[1]" strokeWidth={2} />
         </button>
@@ -32,7 +32,7 @@ export default function Header({
 
       {/* Center Chat Info Pill */}
       <div
-        className="liquid-glass flex flex-1 flex-col min-w-[160px] justify-center items-center h-[42px] rounded-full overflow-hidden shrink-0"
+        className="liquid-glass flex flex-1 flex-col min-w-[160px] justify-center items-center h-[46px] rounded-full overflow-hidden shrink-0"
       >
         <span className="relative z-[1] text-[17px] font-medium leading-[21px] text-white truncate px-4 tracking-[-0.01em]">
           {hideName ? <MarkerStrike text={title} className="marker-strike--header" /> : title}
@@ -43,7 +43,7 @@ export default function Header({
       {/* Right Avatar Pill */}
       <div className='flex-1 flex justify-end'>
         <button
-          className="liquid-glass flex items-center justify-center size-[42px] rounded-full shrink-0 transition-transform duration-200 active:scale-95"
+          className="liquid-glass flex items-center justify-center size-[46px] rounded-full shrink-0 transition-transform duration-200 active:scale-95"
         >
           {/* Topic icon */}
           <span className="relative z-[1] w-[28px] h-[28px] flex items-center justify-center">

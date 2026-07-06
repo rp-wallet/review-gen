@@ -47,7 +47,7 @@ export default function PinnedMessage({ text, hideNames = false }: PinnedMessage
     <div
       className="liquid-glass flex items-center w-full cursor-pointer relative text-[var(--tg-text)] shrink-0 z-[2]"
       style={{
-        height: '44px',
+        height: '48px',
         borderRadius: '27px',
         paddingLeft: '20px',
         paddingRight: '14px',
