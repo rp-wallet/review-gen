@@ -10,6 +10,30 @@
       ],
       "port": 3000,
       "autoPort": true
+    },
+    {
+      "name": "hub",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev:hub",
+        "--prefix",
+        "/Users/nilabjodey/rp-wallet-hub"
+      ],
+      "port": 3000,
+      "autoPort": true
+    },
+    {
+      "name": "platform-hub",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev:hub",
+        "--prefix",
+        "/Users/nilabjodey/rp-wallet-platform"
+      ],
+      "port": 3000,
+      "autoPort": true
     }
   ]
 }

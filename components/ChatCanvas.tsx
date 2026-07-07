@@ -16,6 +16,7 @@ interface ChatCanvasProps {
   botAvatarInitial?: string;
   botAvatarColor?: string;
   botAvatarImage?: string;
+  customerColor?: string;
   showProfileIntro?: boolean;
   hideNames?: boolean;
   device?: DeviceId;
@@ -63,6 +64,7 @@ export default function ChatCanvas({
   botAvatarInitial = 'L',
   botAvatarColor = '#3478F6',
   botAvatarImage = '',
+  customerColor = '#3478F6',
   showProfileIntro = true,
   hideNames = false,
   device
@@ -126,6 +128,7 @@ export default function ChatCanvas({
         <Header
           title={review.customerName || 'Customer'}
           subtitle={`${review.messages?.length || 0} messages`}
+          avatarColor={customerColor}
           hideName={hideNames}
         />
         {showPinnedProfile && <PinnedMessage text={profileText} hideNames={hideNames} />}

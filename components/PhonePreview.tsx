@@ -16,6 +16,7 @@ interface PhonePreviewProps {
   botAvatarInitial?: string;
   botAvatarColor?: string;
   botAvatarImage?: string;
+  customerColor?: string;
   showProfileIntro?: boolean;
   hideNames?: boolean;
   device?: DeviceId;
@@ -32,6 +33,7 @@ export default function PhonePreview({
   botAvatarInitial,
   botAvatarColor,
   botAvatarImage,
+  customerColor,
   showProfileIntro,
   hideNames = false,
   device,
@@ -109,6 +111,7 @@ export default function PhonePreview({
           botAvatarInitial={botAvatarInitial}
           botAvatarColor={botAvatarColor}
           botAvatarImage={botAvatarImage}
+          customerColor={customerColor}
           showProfileIntro={showProfileIntro}
           hideNames={hideNames}
           device={device}

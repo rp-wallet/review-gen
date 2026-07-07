@@ -11,11 +11,24 @@ interface HeaderProps {
   hideName?: boolean;
 }
 
+/* Top stop of the topic-icon gradient: the customer color mixed toward white. */
+function lighten(hex: string, amount: number) {
+  const value = hex.replace('#', '');
+  const full = value.length === 3 ? value.split('').map((c) => c + c).join('') : value;
+  const channels = [0, 2, 4].map((i) => {
+    const channel = parseInt(full.slice(i, i + 2), 16);
+    return Math.round(channel + (255 - channel) * amount).toString(16).padStart(2, '0');
+  });
+  return `#${channels.join('')}`;
+}
+
 export default function Header({
   title = "Alfz",
   subtitle = "In Larper_wallet_support_team",
+  avatarColor = '#3478F6',
   hideName = false,
 }: HeaderProps) {
+  const gradientId = `tg-topic-icon-grad-${avatarColor.replace('#', '')}`;
   return (
     <div
       className="flex items-center gap-[8px] w-full cursor-pointer relative text-[var(--tg-text)] shrink-0 px-1"
@@ -46,11 +59,17 @@ export default function Header({
           className="liquid-glass flex items-center justify-center size-[46px] rounded-full shrink-0"
         >
           {/* Topic icon */}
-          <span className="relative z-[1] w-[28px] h-[28px] flex items-center justify-center">
-            <svg viewBox="0 0 24 24" className="w-full h-full text-[#3478F6]" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.03 2 11c0 2.87 1.5 5.43 3.82 7.07L4.5 22l4.23-2.11A10.87 10.87 0 0012 20c5.52 0 10-4.03 10-9s-4.48-9-10-9z" />
+          <span className="relative z-[1] w-[34px] h-[34px] flex items-center justify-center">
+            <svg viewBox="0 0 24 24" className="w-full h-full">
+              <defs>
+                <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={lighten(avatarColor, 0.28)} />
+                  <stop offset="100%" stopColor={avatarColor} />
+                </linearGradient>
+              </defs>
+              <path fill={`url(#${gradientId})`} d="M12 2C6.48 2 2 6.03 2 11c0 2.87 1.5 5.43 3.82 7.07L4.5 22l4.23-2.11A10.87 10.87 0 0012 20c5.52 0 10-4.03 10-9s-4.48-9-10-9z" />
             </svg>
-            <span className="absolute inset-0 flex items-center justify-center text-white text-[13px] font-bold pb-[2px] pr-[1px]">{title.charAt(0).toUpperCase()}</span>
+            <span className="absolute inset-0 flex items-center justify-center text-white text-[15px] font-bold pb-[2px] pr-[1px]">{title.charAt(0).toUpperCase()}</span>
           </span>
         </button>
       </div>

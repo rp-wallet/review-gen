@@ -411,6 +411,7 @@ export default function ChatBuilderPage() {
           botAvatarInitial={botAvatarInitial}
           botAvatarColor={botAvatarColor}
           botAvatarImage={botAvatarImage}
+          customerColor={avatarColor}
           showProfileIntro={showProfileIntro}
           hideNames={hideNames}
           device={device}
