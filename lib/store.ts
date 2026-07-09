@@ -3,6 +3,7 @@
 import { create } from 'zustand';
 import type { GenerationResult } from '@/lib/types';
 import { DeviceId, DEFAULT_DEVICE_ID } from '@/lib/devices';
+import { DEFAULT_PLATFORM_ID, PlatformId, getPlatform } from '@/lib/platforms';
 
 export type Entitlement = {
   plan: 'free' | 'pro';
@@ -30,6 +31,7 @@ type MeState = Entitlement & {
 type AiReviewsState = {
   result: GenerationResult | null;
   selectedId: string | null;
+  platform: PlatformId;
   productName: string;
   productDesc: string;
   count: number;
@@ -51,6 +53,8 @@ interface AppStore {
 
   aiReviews: AiReviewsState;
   setAiReviews: (partial: Partial<AiReviewsState>) => void;
+  /** Switches platform and resets the bot identity to that platform's defaults. */
+  setPlatform: (platform: PlatformId) => void;
 }
 
 export const useAppStore = create<AppStore>((set, get) => ({
@@ -91,6 +95,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
   aiReviews: {
     result: null,
     selectedId: null,
+    platform: DEFAULT_PLATFORM_ID,
     productName: 'LarperWallet',
     productDesc: 'A wallet app. Casual Telegram support chats that end in a positive review.',
     count: 5,
@@ -105,4 +110,20 @@ export const useAppStore = create<AppStore>((set, get) => ({
   },
 
   setAiReviews: (partial) => set((state) => ({ aiReviews: { ...state.aiReviews, ...partial } })),
+
+  setPlatform: (platform) =>
+    set((state) => {
+      if (state.aiReviews.platform === platform) return state;
+      const { identityDefaults } = getPlatform(platform);
+      return {
+        aiReviews: {
+          ...state.aiReviews,
+          platform,
+          botName: identityDefaults.name,
+          botAvatarInitial: identityDefaults.avatarInitial,
+          botAvatarColor: identityDefaults.avatarColor,
+          botAvatarImage: '',
+        },
+      };
+    }),
 }));

@@ -4,6 +4,7 @@ import { creditLedger } from '@/db/schema';
 import { getEntitlement, requireCurrentSession } from '@/lib/session';
 import { isTestAccount, withTestOverride } from '@/lib/test-accounts';
 import type { GenerationResult, ReviewSet } from '@/lib/types';
+import { Platform, getPlatform } from '@/lib/platforms';
 import {
   GEMINI_MODEL,
   ChunkPayload,
@@ -19,6 +20,7 @@ type ScreenshotInput = {
 };
 
 type GenerateRequest = {
+  platform?: string;
   product?: string;
   scenario?: string;
   count?: number;
@@ -32,10 +34,10 @@ type GenerateRequest = {
 // response overflows the output budget and arrives as truncated (invalid) JSON.
 const CHUNK_SIZE = 6;
 
-function assembleResult(chunks: ChunkPayload[], count: number): GenerationResult {
+function assembleResult(chunks: ChunkPayload[], count: number, platform: Platform): GenerationResult {
   const sets = chunks
     .flatMap((chunk) => chunk.sets)
-    .map(normalizeReviewSet)
+    .map((set, index) => normalizeReviewSet(set, index, platform.id))
     .filter((set): set is ReviewSet => Boolean(set))
     .slice(0, count)
     .map((set, index) => ({ ...set, id: `review-${index + 1}` }));
@@ -86,12 +88,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const platform = getPlatform(body.platform);
     const product = body.product?.trim() || 'LarperWallet';
     const scenario = body.scenario?.trim() || 'support-resolution';
     const count = Math.max(1, Math.min(Number(body.count) || 5, 25));
     const minMessages = Math.max(15, Math.min(Number(body.minMessages) || 15, 60));
     const maxMessages = Math.max(minMessages, Math.min(Number(body.maxMessages) || Math.max(minMessages, 24), 60));
-    const stylePrompt = body.stylePrompt?.trim() || 'Casual Telegram support review conversations.';
+    const stylePrompt = body.stylePrompt?.trim() || platform.generation.defaultStylePrompt;
     const screenshots = (body.screenshots || []).slice(0, 8);
     const tester = isTestAccount(session.user.email);
     const entitlement = withTestOverride(await getEntitlement(session.user.id), session.user.email);
@@ -104,7 +107,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'no_credits' }, { status: 402 });
     }
 
-    const buildPrompt = (chunkCount: number, batchIndex: number, totalBatches: number) => `You generate realistic Telegram-style review/support conversations for an internal review generator.
+    const buildPrompt = (chunkCount: number, batchIndex: number, totalBatches: number) => `${platform.generation.promptIntro}
 
 Return ONLY valid JSON. No markdown.
 
@@ -118,9 +121,9 @@ This is batch ${batchIndex + 1} of ${totalBatches} within one larger job generat
 ` : ''}
 
 Use the uploaded screenshots, if present, to infer lingo, pacing, message length, casual spelling, support tone, and review endings.
-
-The pinnedText is also rendered as the first rich profile message in the chat. Keep it profile-style and reusable in both places, for example: "🆔 1359404829 🤑 @customer_name 👤 Customer Name ✅ Telegram Premium User 🌐 Language: en". Use a random 10-digit ID, where each digit may be any value 0-9. Never use ascending or descending IDs like 0123456789 or 9876543210.
-
+${platform.generation.pinnedRules ? `
+${platform.generation.pinnedRules}
+` : ''}
 JSON schema:
 {
   "confidence": number between 0 and 100,
@@ -150,7 +153,6 @@ Rules:
 - Generate exactly ${chunkCount} sets.
 - Each set should have ${minMessages} to ${maxMessages} messages.
 - Give every set a different random statusBarTime in 24-hour iPhone status bar format, like "9:41" or "17:13".
-- Make it feel like Telegram support, not a formal testimonial.
 - Customer language can be casual, typo-prone, short, and natural.
 - Support should guide, resolve, and ask for feedback only when it fits.
 - Do not include reply/thread references. Every message must make sense from visible prior messages only.
@@ -165,18 +167,13 @@ Timing & dates:
 - Make each set's statusBarTime fall shortly after that conversation's last message time.
 
 Names & identity:
-- Every set gets a distinct customerName and a matching @username (e.g. "Dara K." with @darak_tt) — no name or handle repeats across sets.
-- Keep the 👤 name in pinnedText identical to customerName.
-- Vary customer personas across sets: nationality-flavored English, terse typers, emoji users, all-lowercase typers, occasional voice-of-frustration.
+${platform.generation.identityRules}
 
-Telegram rhythm:
-- Prefer several short messages in a row over one long paragraph; both sides may double- or triple-text.
-- Sprinkle natural artifacts sparingly: a typo left uncorrected, a follow-up "wait nvm got it", "?" alone, lowercase starts. At most a couple per conversation.
-- Emoji: light and uneven — some sets nearly none, none more than a handful total.
+${platform.label} rhythm:
+${platform.generation.styleRules}
 
 Ending:
-- Each conversation resolves the issue and lands on a genuine-sounding positive close from the customer — a vouch, thanks, or a "legit, recommended" style line in their own voice.
-- Never use canned support cliches ("Is there anything else I can help you with?", "We appreciate your patience") or AI-isms ("I hope this helps!"). Endings must differ across sets.`;
+${platform.generation.endingRules}`;
 
     const chunkCounts: number[] = [];
     for (let remaining = count; remaining > 0; remaining -= CHUNK_SIZE) {
@@ -196,7 +193,7 @@ Ending:
     };
 
     const chunks = await Promise.all(chunkCounts.map((chunkCount, index) => callGemini(chunkCount, index)));
-    const result = assembleResult(chunks, count);
+    const result = assembleResult(chunks, count, platform);
 
     if (!tester) {
       await db.insert(creditLedger).values({
@@ -207,6 +204,7 @@ Ending:
           count: result.sets.length,
           model: GEMINI_MODEL,
           product,
+          platform: platform.id,
         },
       });
     }

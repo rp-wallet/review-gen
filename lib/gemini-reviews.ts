@@ -1,5 +1,6 @@
 import { randomInt } from 'node:crypto';
 import type { ReviewMessage, ReviewSet } from '@/lib/types';
+import { DEFAULT_PLATFORM_ID, PlatformId, getPlatform } from '@/lib/platforms';
 
 export const GEMINI_MODEL = 'gemini-2.5-flash';
 export const MAX_OUTPUT_TOKENS = 65536;
@@ -47,7 +48,11 @@ export function randomStatusBarTime(used: Set<string>) {
   return `${randomInt(0, 24)}:${String(randomInt(0, 60)).padStart(2, '0')}`;
 }
 
-export function normalizeReviewSet(value: unknown, index: number): ReviewSet | null {
+export function normalizeReviewSet(
+  value: unknown,
+  index: number,
+  platform: PlatformId = DEFAULT_PLATFORM_ID
+): ReviewSet | null {
   if (!isObject(value)) return null;
 
   const rawMessages = Array.isArray(value.messages) ? value.messages : [];
@@ -77,7 +82,11 @@ export function normalizeReviewSet(value: unknown, index: number): ReviewSet | n
     title: textOr(value.title, `Review ${index + 1}`),
     summary: textOr(value.summary, ''),
     customerName,
-    pinnedText: normalizePinnedText(value.pinnedText, customerName),
+    // Only Telegram has a pinned profile bar; other platforms keep it empty
+    // rather than getting the Telegram-style fallback injected.
+    pinnedText: getPlatform(platform).features.pinnedMessage
+      ? normalizePinnedText(value.pinnedText, customerName)
+      : textOr(value.pinnedText, ''),
     statusBarTime: normalizeStatusBarTime(value.statusBarTime),
     messages,
   };

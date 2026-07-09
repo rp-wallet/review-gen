@@ -21,6 +21,8 @@ import {
 } from 'lucide-react';
 import { ReviewSet, GenerationResult } from '@/lib/types';
 import { DeviceId } from '@/lib/devices';
+import { getPlatform } from '@/lib/platforms';
+import PlatformPicker from '@/components/PlatformPicker';
 import PhonePreview from '@/components/PhonePreview';
 import WorkspaceHeader from '@/components/WorkspaceHeader';
 import AuthModal, { AuthModalVariant } from '@/components/AuthModal';
@@ -101,10 +103,12 @@ export default function AiReviewsPage() {
   // Generator state lives in the app store so results and inputs survive
   // route changes (e.g. Edit review → chat builder → back).
   const {
-    result, selectedId, productName, productDesc, count, minMessages, maxMessages,
+    result, selectedId, platform, productName, productDesc, count, minMessages, maxMessages,
     hideNames, device, botName, botAvatarInitial, botAvatarColor, botAvatarImage,
   } = useAppStore((s) => s.aiReviews);
   const setAiReviews = useAppStore((s) => s.setAiReviews);
+  const setPlatform = useAppStore((s) => s.setPlatform);
+  const platformConfig = getPlatform(platform);
   const me = useAppStore((s) => s.me);
   const fetchMe = useAppStore((s) => s.fetchMe);
 
@@ -216,15 +220,16 @@ export default function AiReviewsPage() {
   const builderImportPayload = useCallback(
     (set: ReviewSet) => ({
       review: set,
+      platform,
       botName,
       botAvatarInitial,
       botAvatarColor,
       botAvatarImage,
-      showProfileIntro: true,
+      showProfileIntro: platformConfig.features.profileIntro,
       hideNames,
       device,
     }),
-    [botAvatarColor, botAvatarImage, botAvatarInitial, botName, device, hideNames]
+    [botAvatarColor, botAvatarImage, botAvatarInitial, botName, device, hideNames, platform, platformConfig]
   );
 
   const editSelectedReview = () => {
@@ -246,6 +251,7 @@ export default function AiReviewsPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          platform,
           product: productName,
           stylePrompt: productDesc,
           count,
@@ -283,7 +289,7 @@ export default function AiReviewsPage() {
       setLoading(false);
       fetchMe(session?.user?.id ?? null, true);
     }
-  }, [count, examples, maxMessages, minMessages, productDesc, productName, fetchMe, session?.user?.id, setResult, setSelectedId]);
+  }, [count, examples, maxMessages, minMessages, platform, productDesc, productName, fetchMe, session?.user?.id, setResult, setSelectedId]);
 
   const runRefine = useCallback(
     async (scope: 'selected' | 'all') => {
@@ -305,7 +311,7 @@ export default function AiReviewsPage() {
         const res = await fetch('/api/refine-reviews', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ instruction, sets: targets, product: productName }),
+          body: JSON.stringify({ instruction, sets: targets, product: productName, platform }),
         });
         const payload = await res.json();
         if (!res.ok) {
@@ -325,7 +331,7 @@ export default function AiReviewsPage() {
         setRefining(null);
       }
     },
-    [me.isPro, productName, refinePrompt, refining, result, selected.id, session?.user, setResult]
+    [me.isPro, platform, productName, refinePrompt, refining, result, selected.id, session?.user, setResult]
   );
 
   const runExport = useCallback(async () => {
@@ -334,7 +340,7 @@ export default function AiReviewsPage() {
     setExporting(true);
     try {
       await exportChatScreenshot(node, selected.customerName || 'review', {
-        app: 'telegram',
+        app: platform,
         device,
         title: selected.title || selected.customerName || 'review',
         meta: builderImportPayload(selected),
@@ -349,7 +355,7 @@ export default function AiReviewsPage() {
     } finally {
       setExporting(false);
     }
-  }, [builderImportPayload, device, selected]);
+  }, [builderImportPayload, device, platform, selected]);
 
   // Renders every generated set through the same export pipeline, zips the
   // PNGs (store-level — they are already compressed), and downloads one file.
@@ -368,7 +374,7 @@ export default function AiReviewsPage() {
         const node = previewHostRef.current?.querySelector<HTMLElement>('.chat-bg');
         if (!node) throw new Error('Preview is not ready.');
         const blob = await renderChatScreenshot(node, {
-          app: 'telegram',
+          app: platform,
           device,
           title: set.title || set.customerName,
           meta: builderImportPayload(set),
@@ -390,7 +396,7 @@ export default function AiReviewsPage() {
       setSelectedId(previousSelected);
       setBulk(null);
     }
-  }, [builderImportPayload, bulk, device, productName, result, selectedId, setSelectedId]);
+  }, [builderImportPayload, bulk, device, platform, productName, result, selectedId, setSelectedId]);
 
   const handleBulkDownload = () => {
     if (!session?.user) {
@@ -506,7 +512,8 @@ export default function AiReviewsPage() {
               </h2>
               <p className="text-[12px] text-muted-foreground">Select one to preview it</p>
             </div>
-            {selected.messages.length > 0 && !loading && (
+            {/* Reddit thread layout has no builder canvas yet. */}
+            {selected.messages.length > 0 && !loading && platform !== 'reddit' && (
               <Button variant="brand" size="sm" onClick={editSelectedReview}>
                 <PencilLine size={14} />
                 Edit review
@@ -576,12 +583,13 @@ export default function AiReviewsPage() {
         {/* ── Preview (center) ───────────────────────────────────── */}
         <PhonePreview
           review={selected}
+          platform={platform}
           botName={botName}
           botAvatarInitial={botAvatarInitial}
           botAvatarColor={botAvatarColor}
           botAvatarImage={botAvatarImage}
-          showProfileIntro
-          hideNames={hideNames}
+          showProfileIntro={platformConfig.features.profileIntro}
+          hideNames={platformConfig.features.hideNames && hideNames}
           device={device}
           downloadName={selected.customerName || 'review'}
           hideCta
@@ -606,6 +614,15 @@ export default function AiReviewsPage() {
             }}
           >
             <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
+                {/* Reddit stays disabled until its thread canvas exists — the
+                    preview would otherwise render Telegram chrome for it. */}
+                <PlatformPicker value={platform} onChange={setPlatform} disabled={['reddit']} />
+                <p className="px-1 text-[11.5px] text-muted-foreground">
+                  Reviews are generated as {platformConfig.label} {platformConfig.conversationNoun}s
+                </p>
+              </div>
+
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -689,13 +706,19 @@ export default function AiReviewsPage() {
                       />
                     </div>
                   </div>
-                  <label htmlFor="ai-hide-names" className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-border bg-muted/20 px-3 py-2.5">
-                    <span className="flex flex-col gap-0.5">
-                      <span className="text-[13px] font-medium text-foreground">Hide names</span>
-                      <span className="text-[11.5px] text-muted-foreground">Marker stroke over the header name and pinned username</span>
-                    </span>
-                    <Switch id="ai-hide-names" checked={hideNames} onCheckedChange={setHideNames} />
-                  </label>
+                  {platformConfig.features.hideNames && (
+                    <label htmlFor="ai-hide-names" className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-border bg-muted/20 px-3 py-2.5">
+                      <span className="flex flex-col gap-0.5">
+                        <span className="text-[13px] font-medium text-foreground">Hide names</span>
+                        <span className="text-[11.5px] text-muted-foreground">
+                          {platformConfig.features.pinnedMessage
+                            ? 'Marker stroke over the header name and pinned username'
+                            : 'Marker stroke over the header name'}
+                        </span>
+                      </span>
+                      <Switch id="ai-hide-names" checked={hideNames} onCheckedChange={setHideNames} />
+                    </label>
+                  )}
                   <Button
                     variant="brand"
                     size="lg"
@@ -806,7 +829,7 @@ export default function AiReviewsPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Bot size={14} className="text-brand" />
-                    Bot identity
+                    {platformConfig.senderLabels.support} identity
                   </CardTitle>
                   <CardDescription>Used only in the preview header</CardDescription>
                 </CardHeader>

@@ -3,7 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ReviewSet, ReviewMessage } from '@/lib/types';
 import { DeviceId, DEFAULT_DEVICE_ID, getDevice } from '@/lib/devices';
+import { PlatformId, getPlatform, isPlatformId } from '@/lib/platforms';
 import PhonePreview from '@/components/PhonePreview';
+import PlatformPicker from '@/components/PlatformPicker';
 import WorkspaceHeader from '@/components/WorkspaceHeader';
 import AuthModal from '@/components/AuthModal';
 import { exportChatScreenshot } from '@/lib/export-screenshot';
@@ -50,6 +52,7 @@ const PENDING_ACTION_KEY = 'reviewmockup:pending-action';
 
 type BuilderImport = {
   review?: ReviewSet;
+  platform?: PlatformId;
   botName?: string;
   botAvatarInitial?: string;
   botAvatarColor?: string;
@@ -69,6 +72,7 @@ function cleanMessages(messages: ReviewMessage[]) {
 
 export default function ChatBuilderPage() {
   const { data: session } = useSession();
+  const [platform, setPlatform] = useState<PlatformId>('telegram');
   const [customerName, setCustomerName] = useState('Marketing Pro');
   const [avatarInitial, setAvatarInitial] = useState('M');
   const [avatarColor, setAvatarColor] = useState('#3478F6');
@@ -131,6 +135,7 @@ export default function ChatBuilderPage() {
       const imported = payload.review;
       if (!imported?.messages?.length) return;
 
+      setPlatform(isPlatformId(payload.platform) ? payload.platform : 'telegram');
       setCustomerName(imported.customerName || 'Customer');
       setAvatarInitial((imported.customerName || 'C').slice(0, 1).toUpperCase());
       setPinnedText(imported.pinnedText || '');
@@ -219,10 +224,11 @@ export default function ChatBuilderPage() {
     setExporting(true);
     try {
       await exportChatScreenshot(node, customerName || 'chat', {
-        app: 'telegram',
+        app: platform,
         device,
         title: customerName || 'Chat',
         meta: {
+          platform,
           review: {
             id: 'export',
             title: customerName || 'Chat',
@@ -251,7 +257,7 @@ export default function ChatBuilderPage() {
     } finally {
       setExporting(false);
     }
-  }, [customerName, device, pinnedText, statusBarTime, messages, botName, botAvatarInitial, botAvatarColor, botAvatarImage, showProfileIntro, hideNames]);
+  }, [customerName, device, pinnedText, platform, statusBarTime, messages, botName, botAvatarInitial, botAvatarColor, botAvatarImage, showProfileIntro, hideNames]);
 
   useEffect(() => {
     if (!session?.user) return;
@@ -279,6 +285,8 @@ export default function ChatBuilderPage() {
     setAuthOpen(false);
     runExport();
   };
+
+  const platformConfig = getPlatform(platform);
 
   const mockReview: ReviewSet = {
     id: 'preview',
@@ -376,7 +384,7 @@ export default function ChatBuilderPage() {
                         <span className="msg-row__kind">
                           {incoming ? 'Incoming' : 'Outgoing'}
                           <span className="text-muted-foreground font-normal">
-                            {' '}· {incoming ? botName || 'Bot' : 'User'}
+                            {' '}· {incoming ? botName || platformConfig.senderLabels.support : platformConfig.senderLabels.customer}
                           </span>
                         </span>
                         <span className="msg-row__time">{msg.time}</span>
@@ -407,13 +415,14 @@ export default function ChatBuilderPage() {
         {/* ── Preview (center) ───────────────────────────────────── */}
         <PhonePreview
           review={mockReview}
+          platform={platform}
           botName={botName}
           botAvatarInitial={botAvatarInitial}
           botAvatarColor={botAvatarColor}
           botAvatarImage={botAvatarImage}
           customerColor={avatarColor}
-          showProfileIntro={showProfileIntro}
-          hideNames={hideNames}
+          showProfileIntro={showProfileIntro && platformConfig.features.profileIntro}
+          hideNames={platformConfig.features.hideNames && hideNames}
           device={device}
           downloadName={customerName || 'chat'}
           hideCta
@@ -453,6 +462,14 @@ export default function ChatBuilderPage() {
             }}
           >
             <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
+                {/* Reddit stays disabled until its thread canvas exists. */}
+                <PlatformPicker value={platform} onChange={setPlatform} disabled={['reddit']} />
+                <p className="px-1 text-[11.5px] text-muted-foreground">
+                  Preview and export use {platformConfig.label} chrome
+                </p>
+              </div>
+
               {selected ? (
                 <Card>
                   <CardHeader>
@@ -473,8 +490,8 @@ export default function ChatBuilderPage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="customer">Bot · Incoming</SelectItem>
-                          <SelectItem value="support">User · Outgoing</SelectItem>
+                          <SelectItem value="customer">{platformConfig.senderLabels.support} · Incoming</SelectItem>
+                          <SelectItem value="support">{platformConfig.senderLabels.customer} · Outgoing</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -544,13 +561,19 @@ export default function ChatBuilderPage() {
                       <input id="cust-color" type="color" className="dash-color" value={avatarColor} onChange={(e) => setAvatarColor(e.target.value)} />
                     </div>
                   </div>
-                  <label htmlFor="hide-names" className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-border bg-muted/20 px-3 py-2.5">
-                    <span className="flex flex-col gap-0.5">
-                      <span className="text-[13px] font-medium text-foreground">Hide names</span>
-                      <span className="text-[11.5px] text-muted-foreground">Marker stroke over the header name and pinned username</span>
-                    </span>
-                    <Switch id="hide-names" checked={hideNames} onCheckedChange={setHideNames} />
-                  </label>
+                  {platformConfig.features.hideNames && (
+                    <label htmlFor="hide-names" className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-border bg-muted/20 px-3 py-2.5">
+                      <span className="flex flex-col gap-0.5">
+                        <span className="text-[13px] font-medium text-foreground">Hide names</span>
+                        <span className="text-[11.5px] text-muted-foreground">
+                          {platformConfig.features.pinnedMessage
+                            ? 'Marker stroke over the header name and pinned username'
+                            : 'Marker stroke over the header name'}
+                        </span>
+                      </span>
+                      <Switch id="hide-names" checked={hideNames} onCheckedChange={setHideNames} />
+                    </label>
+                  )}
                 </CardContent>
               </Card>
 
@@ -578,9 +601,9 @@ export default function ChatBuilderPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Bot size={14} className="text-brand" />
-                    Bot
+                    {platformConfig.senderLabels.support}
                   </CardTitle>
-                  <CardDescription>The automated sender on the left</CardDescription>
+                  <CardDescription>The incoming sender on the left</CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-4 pt-4">
                   <Separator />
@@ -628,6 +651,7 @@ export default function ChatBuilderPage() {
                 </CardContent>
               </Card>
 
+              {platformConfig.features.pinnedMessage && (
               <Card>
                 <CardHeader className='flex flex-row justify-between'>
                   <CardTitle className="flex items-center gap-2">
@@ -653,6 +677,7 @@ export default function ChatBuilderPage() {
                   </div>
                 </CardContent>
               </Card>
+              )}
 
               {!selected && (
                 <Button

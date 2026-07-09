@@ -19,6 +19,7 @@ import {
   Copy,
   Check,
   ArrowRight,
+  MessagesSquare,
 } from 'lucide-react';
 import WorkspaceHeader from '@/components/WorkspaceHeader';
 import AuthModal from '@/components/AuthModal';
@@ -33,6 +34,7 @@ import {
 import { useSession } from '@/lib/auth-client';
 import { getDevice } from '@/lib/devices';
 import { downloadBlob } from '@/lib/export-screenshot';
+import type { AppType } from '@/lib/platforms';
 import type { ReviewMessage, ReviewSet } from '@/lib/types';
 
 type ExportMeta = {
@@ -47,7 +49,7 @@ type ExportMeta = {
 
 type ExportRow = {
   id: string;
-  app: 'telegram' | 'instagram' | 'twitter';
+  app: AppType;
   device: string | null;
   width: number;
   height: number;
@@ -56,8 +58,8 @@ type ExportRow = {
   createdAt: string;
 };
 
-const APP_LABELS = { telegram: 'Telegram', instagram: 'Instagram', twitter: 'X / Twitter' } as const;
-const APP_ICONS = { telegram: Send, instagram: Camera, twitter: UserRound } as const;
+const APP_LABELS = { telegram: 'Telegram', instagram: 'Instagram', twitter: 'X / Twitter', reddit: 'Reddit' } as const;
+const APP_ICONS = { telegram: Send, instagram: Camera, twitter: UserRound, reddit: MessagesSquare } as const;
 const BANNER_KEY = 'reviewmockup:exports-banner-dismissed';
 
 function formatDate(iso: string) {

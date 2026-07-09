@@ -5,6 +5,7 @@ import puppeteer, { type LaunchOptions } from 'puppeteer-core';
 import { db } from '@/db';
 import { exportLog } from '@/db/schema';
 import { countRecentExports, getEntitlement, requireCurrentSession } from '@/lib/session';
+import { normalizeAppType } from '@/lib/platforms';
 import { withTestOverride } from '@/lib/test-accounts';
 
 const IPHONE_16_PRO_WIDTH = 402;
@@ -232,7 +233,7 @@ export async function POST(request: Request) {
 
     await db.insert(exportLog).values({
       userId: session.user.id,
-      app: app === 'instagram' || app === 'twitter' ? app : 'telegram',
+      app: normalizeAppType(app),
       device: typeof device === 'string' ? device : null,
       width: screenWidth,
       height: screenHeight,

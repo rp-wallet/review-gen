@@ -7,11 +7,13 @@ import { Button } from '@/components/ui/button';
 import { ReviewSet } from '@/lib/types';
 import { DeviceId, getDevice } from '@/lib/devices';
 import { exportChatScreenshot } from '@/lib/export-screenshot';
+import type { PlatformId } from '@/lib/platforms';
 
 const StableChatCanvas = memo(ChatCanvas);
 
 interface PhonePreviewProps {
   review: ReviewSet;
+  platform?: PlatformId;
   botName?: string;
   botAvatarInitial?: string;
   botAvatarColor?: string;
@@ -29,6 +31,7 @@ interface PhonePreviewProps {
 
 export default function PhonePreview({
   review,
+  platform,
   botName,
   botAvatarInitial,
   botAvatarColor,
@@ -107,6 +110,7 @@ export default function PhonePreview({
         {screen.cutout === 'notch' && <div className="phone-notch" aria-hidden="true" />}
         <StableChatCanvas
           review={review}
+          platform={platform}
           botName={botName}
           botAvatarInitial={botAvatarInitial}
           botAvatarColor={botAvatarColor}

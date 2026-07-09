@@ -3,11 +3,13 @@ import { getEntitlement, requireCurrentSession } from '@/lib/session';
 import { withTestOverride } from '@/lib/test-accounts';
 import type { ReviewSet } from '@/lib/types';
 import { callGeminiText, normalizeReviewSet, parseChunk } from '@/lib/gemini-reviews';
+import { getPlatform } from '@/lib/platforms';
 
 type RefineRequest = {
   instruction?: string;
   sets?: ReviewSet[];
   product?: string;
+  platform?: string;
 };
 
 // Rewriting emits roughly as much JSON as generating, so reuse the same
@@ -56,6 +58,7 @@ export async function POST(request: NextRequest) {
     }
 
     const product = body.product?.trim() || 'the product';
+    const platform = getPlatform(body.platform);
 
     // Refining edits already-paid-for reviews, so it gates on Pro but does
     // not consume credits.
@@ -64,7 +67,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'upgrade_required' }, { status: 402 });
     }
 
-    const buildPrompt = (chunk: ReviewSet[]) => `You revise existing Telegram-style review/support conversations for an internal review generator.
+    const buildPrompt = (chunk: ReviewSet[]) => `You revise existing ${platform.label}-style review/support conversations for an internal review generator.
 
 Return ONLY valid JSON. No markdown.
 
@@ -104,16 +107,16 @@ Rules:
 - Return exactly ${chunk.length} sets, keeping each set's "id" unchanged — this is how revisions map back to originals.
 - Apply the instruction to every set, but keep each conversation's distinct voice, persona, and story unless the instruction says otherwise.
 - Change only what the instruction requires; keep everything else (names, pinnedText, statusBarTime, dates, message count, pacing) as close to the original as possible.
-- Keep the 👤 name in pinnedText identical to customerName.
+${platform.features.pinnedMessage ? '- Keep the 👤 name in pinnedText identical to customerName.' : '- Keep pinnedText as an empty string.'}
 - Message times must still move strictly forward within a conversation, in 12-hour "h:mm AM/PM" format.
-- Keep it feeling like casual Telegram support chat — no canned support cliches or AI-isms.
+- Keep it feeling like a casual ${platform.label} ${platform.conversationNoun} — no canned support cliches or AI-isms.
 - Avoid secrets, seed phrases, private keys, real wallet addresses, or impersonation claims.
 - Update "summary" if the story changed.`;
 
     const refineChunk = async (chunk: ReviewSet[]) => {
       const parsed = parseChunk(await callGeminiText(apiKey, [{ text: buildPrompt(chunk) }]));
       return parsed.sets
-        .map(normalizeReviewSet)
+        .map((set, index) => normalizeReviewSet(set, index, platform.id))
         .filter((set): set is ReviewSet => Boolean(set));
     };
 

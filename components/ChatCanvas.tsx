@@ -7,11 +7,15 @@ import DateSeparator from '@/components/DateSeparator';
 import ScrollAnchor from '@/components/ScrollAnchor';
 import StatusBar from '@/components/StatusBar';
 import MarkerStrike from '@/components/MarkerStrike';
+import InstagramCanvas from '@/components/InstagramCanvas';
 import { ReviewSet, ReviewMessage } from '@/lib/types';
 import { DeviceId, getDevice } from '@/lib/devices';
+import type { PlatformId } from '@/lib/platforms';
 
 interface ChatCanvasProps {
   review: ReviewSet;
+  /** Which app chrome to draw; defaults to the original Telegram canvas. */
+  platform?: PlatformId;
   botName?: string;
   botAvatarInitial?: string;
   botAvatarColor?: string;
@@ -58,7 +62,26 @@ function profileIntroContent(text: string, hideNames: boolean) {
   });
 }
 
-export default function ChatCanvas({
+/** Dispatches to the right app chrome. Separate components keep hook order
+ *  stable when the platform switches mid-session. */
+export default function ChatCanvas({ platform = 'telegram', ...props }: ChatCanvasProps) {
+  if (platform === 'instagram') {
+    return (
+      <InstagramCanvas
+        review={props.review}
+        botAvatarInitial={props.botAvatarInitial}
+        botAvatarColor={props.botAvatarColor}
+        botAvatarImage={props.botAvatarImage}
+        customerColor={props.customerColor}
+        hideNames={props.hideNames}
+        device={props.device}
+      />
+    );
+  }
+  return <TelegramCanvas {...props} />;
+}
+
+function TelegramCanvas({
   review,
   botName = 'LarperWallet_bot',
   botAvatarInitial = 'L',
@@ -68,7 +91,7 @@ export default function ChatCanvas({
   showProfileIntro = true,
   hideNames = false,
   device
-}: ChatCanvasProps) {
+}: Omit<ChatCanvasProps, 'platform'>) {
   const screen = getDevice(device);
   const bot = {
     name: botName,

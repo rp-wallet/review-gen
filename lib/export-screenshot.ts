@@ -1,3 +1,5 @@
+import type { AppType } from '@/lib/platforms';
+
 export const SCREEN_WIDTH = 402;
 export const SCREEN_HEIGHT = 874;
 
@@ -66,7 +68,7 @@ function createExportClone(node: HTMLElement, width: number, height: number) {
 }
 
 export type ExportOptions = {
-  app?: 'telegram' | 'instagram' | 'twitter';
+  app?: AppType;
   device?: string;
   /** Display title stored in the export history. */
   title?: string;

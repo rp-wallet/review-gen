@@ -65,7 +65,7 @@ export const subscriptionStatusEnum = pgEnum('subscription_status', [
   'failed',
   'expired',
 ]);
-export const appTypeEnum = pgEnum('app_type', ['telegram', 'instagram', 'twitter']);
+export const appTypeEnum = pgEnum('app_type', ['telegram', 'instagram', 'twitter', 'reddit']);
 
 export const subscription = pgTable('subscription', {
   id: uuid('id').primaryKey().defaultRandom(),
